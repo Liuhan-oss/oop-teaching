@@ -1,0 +1,56 @@
+/* 全局样式重置和基础样式 */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+/* 滚动条美化 */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f3f5;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #ced4da;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #adb5bd;
+}
+
+/* 通用动画 */
+.fade-in {
+    animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+/* 禁用按钮样式 */
+.btn:disabled {
+    background: #e5e6e9;
+    color: #adb5bd;
+    cursor: not-allowed;
+    transform: none !important;
+}
+
+/* 表单验证提示 */
+.error-tip {
+    color: #f72585;
+    font-size: 12px;
+    margin-top: 5px;
+    display: none;
+}
+
+input.error {
+    border-color: #f72585 !important;
+}

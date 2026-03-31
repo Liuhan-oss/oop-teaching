@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>教师班级管理</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 800px; margin: 20px auto; }
+        .card { border: 1px solid #eee; padding: 16px; margin: 10px 0; border-radius: 8px; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h2>我的班级</h2>
+    <div id="classList"></div>
+
+    <h3>创建新班级</h3>
+    <input type="text" id="className" placeholder="班级名称">
+    <input type="text" id="classCode" placeholder="班级码（如：OOP2025）">
+    <button id="createClass">创建班级</button>
+
+    <script>
+        axios.defaults.baseURL = 'http://127.0.0.1:5000';
+        const username = 'T2024001'; // 教师账号
+        const role = 'teacher';
+
+        // 加载我的班级
+        async function loadMyClasses() {
+            const res = await axios.post('/api/class/my', { username, role });
+            const list = document.getElementById('classList');
+            list.innerHTML = '';
+            res.data.forEach(cls => {
+                const div = document.createElement('div');
+                div.className = 'card';
+                div.innerHTML = `
+                    <h4>${cls.name} (班级码: ${cls.code})</h4>
+                    <button onclick="loadStudents(${cls.id})">查看本班学生</button>
+                    <div id="students-${cls.id}"></div>
+                `;
+                list.appendChild(div);
+            });
+        }
+
+        // 查看班级学生
+        async function loadStudents(classId) {
+            const res = await axios.post('/api/class/students', { class_id: classId });
+            const el = document.getElementById(`students-${classId}`);
+            el.innerHTML = '<p>学生列表：' + res.data.join(', ') + '</p>';
+        }
+
+        // 创建班级
+        document.getElementById('createClass').onclick = async () => {
+            const name = document.getElementById('className').value;
+            const code = document.getElementById('classCode').value;
+            const res = await axios.post('/api/class/create', { username, role, class_name: name, class_code: code });
+            alert(res.data.msg);
+            loadMyClasses();
+        };
+
+        // 页面加载时执行
+        loadMyClasses();
+     // 加载 AI 批改作业列表（教师查看）
+function loadCheckedHomework() {
+  setActive(event);
+  document.getElementById('mainTitle').innerText = 'AI 智能批改列表';
+
+  const list = JSON.parse(localStorage.getItem("checkedHomework") || "[]");
+
+  let html = `<div class="card">`;
+  if (list.length === 0) {
+    html += `<div style="text-align:center; padding:30px;">暂无学生提交作业</div>`;
+  } else {
+    list.forEach((item, i) => {
+      const needRecheck = item.score < 60 ? "⚠️ 需要重评" : "✅ 正常";
+      html += `
+<div style="padding:14px; border-bottom:1px solid #eee;">
+  <div><strong>${i+1}. ${item.homeworkTitle}</strong></div>
+  <div>得分：${item.score} 分 ${needRecheck}</div>
+  <div>语法：${item.syntax}</div>
+  <div>逻辑：${item.logic}</div>
+  <div>抄袭风险：${item.plagiarism}</div>
+  <div style="font-size:12px; color:#999;">${item.time}</div>
+</div>
+      `;
+    });
+  }
+  html += `</div>`;
+  document.getElementById('list').innerHTML = html;
+}   
+    </script>
+</body>
+</html>

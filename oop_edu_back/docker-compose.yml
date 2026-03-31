@@ -1,0 +1,82 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: oop-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root123456      # 修改为自己的密码
+      MYSQL_DATABASE: oop_edu
+      MYSQL_CHARSET: utf8mb4
+      MYSQL_COLLATION: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql-data:/var/lib/mysql
+      - ./mysql-init:/docker-entrypoint-initdb.d
+    networks:
+      - oop-network
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: oop-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    networks:
+      - oop-network
+    command: redis-server --appendonly yes
+
+  # Flask应用
+  web:
+    build: .
+    container_name: oop-web
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      - FLASK_ENV=production
+      - DATABASE_URL=mysql+pymysql://root:root123456@mysql/oop_edu
+      - REDIS_URL=redis://redis:6379/0
+      - SECRET_KEY=your-secret-key-here-change-in-production
+    volumes:
+      - ./uploads:/app/uploads
+      - ./videos:/app/videos
+      - ./pages:/app/pages
+    networks:
+      - oop-network
+
+  # Nginx反向代理（可选，用于生产环境）
+  nginx:
+    image: nginx:alpine
+    container_name: oop-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - ./pages:/usr/share/nginx/html:ro
+    depends_on:
+      - web
+    networks:
+      - oop-network
+
+volumes:
+  mysql-data:
+  redis-data:
+
+networks:
+  oop-network:
+    driver: bridge

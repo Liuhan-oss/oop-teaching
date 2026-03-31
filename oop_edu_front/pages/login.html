@@ -1,0 +1,1155 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>OOP智慧教学平台 · 登录</title>
+    <!-- 高级字体 - Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        /* ==================== 全局样式 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: "Inter", "Microsoft YaHei", sans-serif;
+            background: #0a0c10;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .grid-bg {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                linear-gradient(rgba(59, 130, 246, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(59, 130, 246, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: 1;
+        }
+
+        .grid-bg::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.1), transparent 70%);
+        }
+
+        .login-wrapper {
+            position: relative;
+            z-index: 10;
+            width: 100%;
+            max-width: 1320px;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .glass-card {
+            width: 100%;
+            max-width: 1100px;
+            min-height: 600px;
+            background: rgba(18, 25, 40, 0.85);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-radius: 48px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.8), inset 0 1px 2px rgba(255, 255, 255, 0.04);
+            display: flex;
+            overflow: hidden;
+        }
+
+        .brand-panel {
+            flex: 1.1;
+            padding: 60px 50px;
+            background: linear-gradient(145deg, rgba(59, 130, 246, 0.12), rgba(124, 58, 237, 0.08));
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            border-right: 1px solid rgba(255, 255, 255, 0.04);
+            position: relative;
+        }
+
+        .brand-panel::after {
+            content: '';
+            position: absolute;
+            top: 20%;
+            right: 0;
+            width: 1px;
+            height: 60%;
+            background: linear-gradient(to bottom, transparent, rgba(255, 255, 255, 0.1), transparent);
+        }
+
+        .brand-icon {
+            width: 72px;
+            height: 72px;
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 40px;
+            box-shadow: 0 15px 30px -10px rgba(59, 130, 246, 0.4);
+        }
+
+        .brand-icon i {
+            font-size: 38px;
+            color: white;
+        }
+
+        .brand-title {
+            font-size: 44px;
+            font-weight: 700;
+            line-height: 1.2;
+            color: white;
+            margin-bottom: 16px;
+            letter-spacing: -1px;
+        }
+
+        .brand-title span {
+            background: linear-gradient(135deg, #fff, #c7d2fe);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+        }
+
+        .brand-sub {
+            font-size: 16px;
+            color: #94a3b8;
+            margin-bottom: 48px;
+            max-width: 340px;
+            line-height: 1.6;
+            font-weight: 400;
+        }
+
+        .stats-grid {
+            display: flex;
+            gap: 40px;
+        }
+
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            color: #64748b;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            font-weight: 500;
+        }
+
+        .login-panel {
+            flex: 0.9;
+            padding: 60px 50px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .login-header {
+            margin-bottom: 40px;
+        }
+
+        .login-header h2 {
+            font-size: 32px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 8px;
+            letter-spacing: -0.5px;
+        }
+
+        .login-header p {
+            color: #64748b;
+            font-size: 14px;
+            font-weight: 400;
+        }
+
+        .login-header p a {
+            color: #3b82f6;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .login-header p a:hover {
+            color: #60a5fa;
+        }
+
+        .role-tabs {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 32px;
+            background: rgba(255, 255, 255, 0.03);
+            padding: 6px;
+            border-radius: 60px;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .role-tab {
+            flex: 1;
+            padding: 12px 20px;
+            border-radius: 40px;
+            text-align: center;
+            font-weight: 500;
+            font-size: 15px;
+            color: #94a3b8;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .role-tab i {
+            font-size: 16px;
+        }
+
+        .role-tab.active {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: white;
+            box-shadow: 0 8px 20px -6px rgba(59, 130, 246, 0.5);
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+            position: relative;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #94a3b8;
+            margin-bottom: 8px;
+            letter-spacing: 0.3px;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .input-wrapper i {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #475569;
+            font-size: 18px;
+            transition: color 0.2s;
+        }
+
+        .input-wrapper input {
+            width: 100%;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            padding: 0 20px 0 52px;
+            font-size: 15px;
+            color: white;
+            transition: all 0.2s;
+            font-family: "Inter", sans-serif;
+        }
+
+        .input-wrapper input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.05);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        .input-wrapper input::placeholder {
+            color: #334155;
+            font-weight: 400;
+        }
+
+        .input-wrapper.focused i {
+            color: #3b82f6;
+        }
+
+        .form-options {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin: 20px 0 32px;
+        }
+
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .remember-me input {
+            width: 18px;
+            height: 18px;
+            accent-color: #3b82f6;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .remember-me span {
+            color: #94a3b8;
+            font-size: 14px;
+        }
+
+        .forgot-link {
+            color: #3b82f6;
+            font-size: 14px;
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .forgot-link:hover {
+            color: #60a5fa;
+        }
+
+        .login-btn {
+            width: 100%;
+            height: 56px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none;
+            border-radius: 18px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 10px 25px -8px rgba(59, 130, 246, 0.5);
+        }
+
+        .login-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 30px -10px rgba(59, 130, 246, 0.6);
+        }
+
+        .login-btn:active {
+            transform: translateY(0);
+        }
+
+        .login-footer {
+            margin-top: 32px;
+            text-align: center;
+            color: #475569;
+            font-size: 13px;
+        }
+
+        .login-footer a {
+            color: #64748b;
+            text-decoration: none;
+            margin: 0 12px;
+            transition: color 0.2s;
+        }
+
+        .login-footer a:hover {
+            color: #94a3b8;
+        }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-container {
+            width: 100%;
+            max-width: 460px;
+            background: #1a1f2e;
+            border-radius: 36px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            box-shadow: 0 30px 60px rgba(0, 0, 0, 0.6);
+            padding: 40px;
+            animation: modalFadeIn 0.3s ease;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 28px;
+        }
+
+        .modal-header h3 {
+            font-size: 24px;
+            font-weight: 600;
+            color: white;
+            letter-spacing: -0.5px;
+        }
+
+        .close-modal {
+            width: 40px;
+            height: 40px;
+            border-radius: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: #94a3b8;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-modal:hover {
+            background: rgba(239, 68, 68, 0.15);
+            color: #ef4444;
+        }
+
+        .code-group {
+            display: flex;
+            gap: 12px;
+        }
+
+        .code-group .input-wrapper {
+            flex: 1;
+        }
+
+        .send-code-btn {
+            width: 120px;
+            height: 56px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 18px;
+            color: #94a3b8;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .send-code-btn:hover:not(:disabled) {
+            background: rgba(59, 130, 246, 0.1);
+            border-color: #3b82f6;
+            color: white;
+        }
+
+        .send-code-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .modal-btn {
+            width: 100%;
+            height: 54px;
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            border: none;
+            border-radius: 18px;
+            color: white;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 900px) {
+            .glass-card {
+                flex-direction: column;
+                max-width: 500px;
+            }
+            .brand-panel {
+                padding: 40px;
+                border-right: none;
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }
+            .brand-title {
+                font-size: 36px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-panel {
+                padding: 40px 25px;
+            }
+            .role-tabs {
+                flex-direction: column;
+                border-radius: 30px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+
+    <div class="login-wrapper">
+        <div class="glass-card">
+            <!-- 左侧品牌区 -->
+            <div class="brand-panel">
+                <div class="brand-icon">
+                    <i class="fas fa-code"></i>
+                </div>
+                <div class="brand-title">
+                    面向对象<br><span>智慧教学平台</span>
+                </div>
+                <div class="brand-sub">
+                    基于知识图谱的OOP学习系统 · 让编程学习更智能
+                </div>
+                <div class="stats-grid">
+                    <div class="stat-item">
+                        <span class="stat-value">7</span>
+                        <span class="stat-label">教学章节</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">60+</span>
+                        <span class="stat-label">知识点</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value">AI</span>
+                        <span class="stat-label">智能批改</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 右侧登录区 -->
+            <div class="login-panel">
+                <div class="login-header">
+                    <h2>登录账号</h2>
+                    <p>新用户？ <a href="#" id="openRegisterLink">立即注册</a></p>
+                </div>
+
+                <!-- 角色切换标签 - 修复自动跳转问题 -->
+                <div class="role-tabs">
+                    <div class="role-tab active" data-role="student" id="tabStudent">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>学生</span>
+                    </div>
+                    <div class="role-tab" data-role="teacher" id="tabTeacher">
+                        <i class="fas fa-chalkboard-user"></i>
+                        <span>教师</span>
+                    </div>
+                </div>
+
+                <!-- 登录表单 -->
+                <div class="input-group">
+                    <label>学号 / 工号</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="username" placeholder="请输入学号" value="2024215612" autocomplete="off">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>密码</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="password" placeholder="••••••••" value="123456">
+                    </div>
+                </div>
+
+                <div class="form-options">
+                    <label class="remember-me">
+                        <input type="checkbox" id="rememberMe" checked>
+                        <span>记住密码</span>
+                    </label>
+                    <a href="#" class="forgot-link" id="openForgotModal">忘记密码？</a>
+                </div>
+
+                <button class="login-btn" id="loginBtn">
+                    <i class="fas fa-arrow-right-to-bracket"></i>
+                    登录
+                </button>
+
+                <div class="login-footer">
+                    <a href="#">帮助</a> · 
+                    <a href="#">隐私条款</a> · 
+                    <a href="#">© 2025 OOP Lab</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 忘记密码模态框 -->
+    <div class="modal-overlay" id="forgotModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>找回密码</h3>
+                <button class="close-modal" id="closeForgotModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>账号</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="forgotUsername" placeholder="请输入学号/工号">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>身份</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-tag"></i>
+                        <input type="text" id="forgotRole" placeholder="student 或 teacher" value="student">
+                    </div>
+                </div>
+                <div class="code-group">
+                    <div class="input-wrapper">
+                        <i class="fas fa-envelope"></i>
+                        <input type="text" id="forgotCode" placeholder="验证码">
+                    </div>
+                    <button class="send-code-btn" id="sendCodeBtn">获取验证码</button>
+                </div>
+                <div class="input-group">
+                    <label>新密码</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="newPassword" placeholder="至少6位">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>确认新密码</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="confirmNewPassword" placeholder="再次输入">
+                    </div>
+                </div>
+                <button class="modal-btn" id="resetPwdBtn">重置密码</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 注册模态框 -->
+    <div class="modal-overlay" id="registerModal">
+        <div class="modal-container">
+            <div class="modal-header">
+                <h3>注册新账号</h3>
+                <button class="close-modal" id="closeRegisterModal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="input-group">
+                    <label>学号/工号</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-id-card"></i>
+                        <input type="text" id="regUsername" placeholder="例如 2024215612">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>姓名</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-signature"></i>
+                        <input type="text" id="regName" placeholder="真实姓名">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>密码</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="regPassword" placeholder="至少6位">
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label>确认密码</label>
+                    <div class="input-wrapper">
+                        <i class="fas fa-lock"></i>
+                        <input type="password" id="regConfirmPwd" placeholder="再次输入">
+                    </div>
+                </div>
+                <div class="role-tabs" style="margin: 20px 0 10px;">
+                    <div class="role-tab active" data-role="student" id="regTabStudent">
+                        <i class="fas fa-graduation-cap"></i> 学生
+                    </div>
+                    <div class="role-tab" data-role="teacher" id="regTabTeacher">
+                        <i class="fas fa-chalkboard-user"></i> 教师
+                    </div>
+                </div>
+                <button class="modal-btn" id="registerSubmitBtn">立即注册</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== 配置 ====================
+        axios.defaults.baseURL = 'http://127.0.0.1:5000';
+        axios.defaults.headers.post['Content-Type'] = 'application/json';
+        axios.defaults.withCredentials = true;
+
+        const STORAGE_KEYS = {
+            USERS: 'edu_users',
+            CURRENT_USER: 'currentUser',
+            LOGIN_INFO: 'edu_login_info',
+            STUDENT_LIST: 'studentList',
+            TEACHER_LIST: 'teacherList'
+        };
+
+        // ==================== 初始化用户数据（用于注册和本地回退）====================
+        function initUsers() {
+            let users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+            if (users.length === 0) {
+                users = [
+                    { username: '2024215612', password: '123456', role: 'student', name: '张三' },
+                    { username: '2024215613', password: '123456', role: 'student', name: '李四' },
+                    { username: 'T2024001', password: '123456', role: 'teacher', name: '张老师' }
+                ];
+                localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+                
+                const studentList = users.filter(u => u.role === 'student').map(u => ({
+                    id: u.username,
+                    studentId: u.username,
+                    name: u.name,
+                    classId: null
+                }));
+                localStorage.setItem(STORAGE_KEYS.STUDENT_LIST, JSON.stringify(studentList));
+                
+                const teacherList = users.filter(u => u.role === 'teacher').map(u => ({
+                    id: u.username,
+                    username: u.username,
+                    name: u.name,
+                    role: 'teacher'
+                }));
+                localStorage.setItem(STORAGE_KEYS.TEACHER_LIST, JSON.stringify(teacherList));
+            }
+        }
+        initUsers();
+
+        // 输入框焦点效果
+        document.querySelectorAll('.input-wrapper input').forEach(input => {
+            input.addEventListener('focus', () => {
+                input.closest('.input-wrapper').classList.add('focused');
+            });
+            input.addEventListener('blur', () => {
+                input.closest('.input-wrapper').classList.remove('focused');
+            });
+        });
+
+        // ==================== 角色切换（修复自动跳转问题）====================
+        const tabStudent = document.getElementById('tabStudent');
+        const tabTeacher = document.getElementById('tabTeacher');
+        let currentRole = 'student'; // 默认学生
+
+        // 移除所有可能的事件监听，重新绑定
+        tabStudent.replaceWith(tabStudent.cloneNode(true));
+        tabTeacher.replaceWith(tabTeacher.cloneNode(true));
+        
+        // 重新获取元素
+        const newTabStudent = document.getElementById('tabStudent');
+        const newTabTeacher = document.getElementById('tabTeacher');
+        
+        newTabStudent.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            newTabStudent.classList.add('active');
+            newTabTeacher.classList.remove('active');
+            currentRole = 'student';
+            // 更新输入框提示
+            document.querySelector('.input-wrapper i.fa-user').nextElementSibling.placeholder = '请输入学号';
+            document.querySelector('label[for="username"]').innerText = '学号';
+        });
+
+        newTabTeacher.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            newTabTeacher.classList.add('active');
+            newTabStudent.classList.remove('active');
+            currentRole = 'teacher';
+            // 更新输入框提示
+            document.querySelector('.input-wrapper i.fa-user').nextElementSibling.placeholder = '请输入工号';
+            document.querySelector('label[for="username"]').innerText = '工号';
+        });
+
+        // 确保默认选中学生
+        newTabStudent.classList.add('active');
+        newTabTeacher.classList.remove('active');
+
+        // ==================== 登录事件（修复默认账号登录问题）====================
+        document.getElementById('loginBtn').addEventListener('click', async () => {
+            const username = document.getElementById('username').value.trim();
+            const password = document.getElementById('password').value.trim();
+            const role = currentRole;
+            const rememberMe = document.getElementById('rememberMe').checked;
+
+            if (!username || !password) {
+                alert('请输入账号和密码');
+                return;
+            }
+
+            try {
+                // 显示加载状态
+                const loginBtn = document.getElementById('loginBtn');
+                const originalText = loginBtn.innerHTML;
+                loginBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> 登录中...';
+                loginBtn.disabled = true;
+
+                // 调用登录API
+                const response = await axios.post('/api/login', {
+                    username: username,
+                    password: password,
+                    role: role
+                }).catch(error => {
+                    console.log('API调用失败，尝试本地验证:', error);
+                    return null;
+                });
+
+                // 恢复按钮状态
+                loginBtn.innerHTML = originalText;
+                loginBtn.disabled = false;
+
+                if (response && response.data && response.data.code === 200) {
+                    // API登录成功
+                    const userData = response.data.data;
+                    
+                    if (rememberMe) {
+                        const loginInfo = {
+                            username,
+                            role,
+                            expireTime: Date.now() + 7 * 24 * 60 * 60 * 1000
+                        };
+                        localStorage.setItem(STORAGE_KEYS.LOGIN_INFO, JSON.stringify(loginInfo));
+                    } else {
+                        localStorage.removeItem(STORAGE_KEYS.LOGIN_INFO);
+                    }
+                    
+                    // 保存当前用户信息
+                    const userInfo = {
+                        username,
+                        role,
+                        name: userData.name
+                    };
+                    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify(userInfo));
+                    
+                    // 学生端额外信息
+                    if (role === 'student') {
+                        localStorage.setItem('currentStudent', JSON.stringify({
+                            id: username,
+                            name: userData.name,
+                            classId: null
+                        }));
+                    }
+                    
+                    alert(`✅ ${role === 'student' ? '学生' : '教师'} ${userData.name} 登录成功！`);
+                    
+                    // 跳转到对应页面
+                    if (role === 'student') {
+                        window.location.href = '/pages/student_index.html';
+                    } else {
+                        window.location.href = '/pages/teacher_index.html';
+                    }
+                } else {
+                    // API调用失败，尝试本地存储验证
+                    console.log('尝试本地存储验证...');
+                    
+                    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+                    const user = users.find(u => u.username === username && u.password === password && u.role === role);
+                    
+                    if (user) {
+                        if (rememberMe) {
+                            const loginInfo = {
+                                username,
+                                role,
+                                expireTime: Date.now() + 7 * 24 * 60 * 60 * 1000
+                            };
+                            localStorage.setItem(STORAGE_KEYS.LOGIN_INFO, JSON.stringify(loginInfo));
+                        } else {
+                            localStorage.removeItem(STORAGE_KEYS.LOGIN_INFO);
+                        }
+                        
+                        localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify({
+                            username,
+                            role,
+                            name: user.name
+                        }));
+                        
+                        if (role === 'student') {
+                            localStorage.setItem('currentStudent', JSON.stringify({
+                                id: username,
+                                name: user.name,
+                                classId: null
+                            }));
+                        }
+                        
+                        alert(`✅ ${role === 'student' ? '学生' : '教师'} ${user.name} 登录成功！（本地验证）`);
+                        
+                        if (role === 'student') {
+                            window.location.href = '/pages/student_index.html';
+                        } else {
+                            window.location.href = '/pages/teacher_index.html';
+                        }
+                    } else {
+                        alert('❌ 账号或密码错误，请重试');
+                    }
+                }
+            } catch (error) {
+                // 恢复按钮状态
+                const loginBtn = document.getElementById('loginBtn');
+                loginBtn.innerHTML = '<i class="fas fa-arrow-right-to-bracket"></i> 登录';
+                loginBtn.disabled = false;
+
+                console.error('登录失败:', error);
+                
+                // 尝试本地存储验证作为最后的回退
+                const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+                const user = users.find(u => u.username === username && u.password === password && u.role === role);
+                
+                if (user) {
+                    localStorage.setItem(STORAGE_KEYS.CURRENT_USER, JSON.stringify({
+                        username,
+                        role,
+                        name: user.name
+                    }));
+                    
+                    if (role === 'student') {
+                        localStorage.setItem('currentStudent', JSON.stringify({
+                            id: username,
+                            name: user.name,
+                            classId: null
+                        }));
+                    }
+                    
+                    alert(`✅ ${role === 'student' ? '学生' : '教师'} ${user.name} 登录成功！（本地验证）`);
+                    
+                    if (role === 'student') {
+                        window.location.href = '/pages/student_index.html';
+                    } else {
+                        window.location.href = '/pages/teacher_index.html';
+                    }
+                } else {
+                    alert('❌ 账号或密码错误，请重试');
+                }
+            }
+        });
+
+        // 回车登录
+        document.addEventListener('keydown', e => {
+            if (e.key === 'Enter') {
+                document.getElementById('loginBtn').click();
+            }
+        });
+
+        // 记住密码填充
+        window.onload = function() {
+            try {
+                const loginInfo = JSON.parse(localStorage.getItem(STORAGE_KEYS.LOGIN_INFO) || '{}');
+                if (loginInfo.username && loginInfo.expireTime > Date.now()) {
+                    document.getElementById('username').value = loginInfo.username;
+                    if (loginInfo.role === 'student') {
+                        newTabStudent.click();
+                    } else {
+                        newTabTeacher.click();
+                    }
+                    const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+                    const user = users.find(u => u.username === loginInfo.username && u.role === loginInfo.role);
+                    if (user) {
+                        document.getElementById('password').value = user.password;
+                    }
+                    document.getElementById('rememberMe').checked = true;
+                }
+            } catch (e) {}
+        };
+
+        // 忘记密码模态框
+        const openForgotBtn = document.getElementById('openForgotModal');
+        const forgotModal = document.getElementById('forgotModal');
+        const closeForgotBtn = document.getElementById('closeForgotModal');
+        const sendCodeBtn = document.getElementById('sendCodeBtn');
+        const resetPwdBtn = document.getElementById('resetPwdBtn');
+
+        openForgotBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            forgotModal.style.display = 'flex';
+        });
+
+        closeForgotBtn.addEventListener('click', () => {
+            forgotModal.style.display = 'none';
+        });
+
+        forgotModal.addEventListener('click', (e) => {
+            if (e.target === forgotModal) {
+                forgotModal.style.display = 'none';
+            }
+        });
+
+        sendCodeBtn.addEventListener('click', () => {
+            const username = document.getElementById('forgotUsername').value.trim();
+            const role = document.getElementById('forgotRole').value.trim();
+            if (!username || !role) {
+                alert('请输入账号和身份');
+                return;
+            }
+            const users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+            if (!users.some(u => u.username === username && u.role === role)) {
+                alert('❌ 该账号不存在');
+                return;
+            }
+
+            sendCodeBtn.disabled = true;
+            sendCodeBtn.textContent = '发送中...';
+            setTimeout(() => {
+                alert('✅ 演示模式：验证码为 123456');
+                let countdown = 60;
+                const timer = setInterval(() => {
+                    countdown--;
+                    sendCodeBtn.textContent = `${countdown}秒后重发`;
+                    if (countdown <= 0) {
+                        clearInterval(timer);
+                        sendCodeBtn.disabled = false;
+                        sendCodeBtn.textContent = '获取验证码';
+                    }
+                }, 1000);
+            }, 1000);
+        });
+
+        resetPwdBtn.addEventListener('click', () => {
+            const username = document.getElementById('forgotUsername').value.trim();
+            const role = document.getElementById('forgotRole').value.trim();
+            const code = document.getElementById('forgotCode').value.trim();
+            const newPwd = document.getElementById('newPassword').value.trim();
+            const confirmPwd = document.getElementById('confirmNewPassword').value.trim();
+
+            if (!username || !role || !code || !newPwd || !confirmPwd) {
+                alert('请填写完整信息');
+                return;
+            }
+            if (newPwd !== confirmPwd) {
+                alert('两次密码不一致');
+                return;
+            }
+            if (newPwd.length < 6) {
+                alert('密码至少6位');
+                return;
+            }
+            if (code !== '123456') {
+                alert('❌ 验证码错误');
+                return;
+            }
+
+            let users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+            users = users.map(u => (u.username === username && u.role === role) ? { ...u, password: newPwd } : u);
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+
+            alert('✅ 密码重置成功！请使用新密码登录');
+            forgotModal.style.display = 'none';
+        });
+
+        // 注册模态框
+        const openRegisterLink = document.getElementById('openRegisterLink');
+        const registerModal = document.getElementById('registerModal');
+        const closeRegisterBtn = document.getElementById('closeRegisterModal');
+        const regTabStudent = document.getElementById('regTabStudent');
+        const regTabTeacher = document.getElementById('regTabTeacher');
+        const registerSubmit = document.getElementById('registerSubmitBtn');
+
+        openRegisterLink.addEventListener('click', (e) => {
+            e.preventDefault();
+            registerModal.style.display = 'flex';
+        });
+
+        closeRegisterBtn.addEventListener('click', () => {
+            registerModal.style.display = 'none';
+        });
+
+        registerModal.addEventListener('click', (e) => {
+            if (e.target === registerModal) {
+                registerModal.style.display = 'none';
+            }
+        });
+
+        let regRole = 'student';
+        regTabStudent.addEventListener('click', () => {
+            regTabStudent.classList.add('active');
+            regTabTeacher.classList.remove('active');
+            regRole = 'student';
+        });
+        regTabTeacher.addEventListener('click', () => {
+            regTabTeacher.classList.add('active');
+            regTabStudent.classList.remove('active');
+            regRole = 'teacher';
+        });
+
+        registerSubmit.addEventListener('click', () => {
+            const username = document.getElementById('regUsername').value.trim();
+            const name = document.getElementById('regName').value.trim();
+            const password = document.getElementById('regPassword').value.trim();
+            const confirmPwd = document.getElementById('regConfirmPwd').value.trim();
+
+            if (!username || !name || !password || !confirmPwd) {
+                alert('请填写完整信息');
+                return;
+            }
+            if (password !== confirmPwd) {
+                alert('两次密码不一致');
+                return;
+            }
+            if (password.length < 6) {
+                alert('密码至少6位');
+                return;
+            }
+
+            let users = JSON.parse(localStorage.getItem(STORAGE_KEYS.USERS) || '[]');
+            if (users.some(u => u.username === username && u.role === regRole)) {
+                alert('❌ 该账号已存在');
+                return;
+            }
+
+            const newUser = { username, password, role: regRole, name };
+            users.push(newUser);
+            localStorage.setItem(STORAGE_KEYS.USERS, JSON.stringify(users));
+
+            if (regRole === 'student') {
+                let studentList = JSON.parse(localStorage.getItem(STORAGE_KEYS.STUDENT_LIST) || '[]');
+                studentList.push({ id: username, studentId: username, name, classId: null });
+                localStorage.setItem(STORAGE_KEYS.STUDENT_LIST, JSON.stringify(studentList));
+            } else {
+                let teacherList = JSON.parse(localStorage.getItem(STORAGE_KEYS.TEACHER_LIST) || '[]');
+                teacherList.push({ id: username, username, name, role: 'teacher' });
+                localStorage.setItem(STORAGE_KEYS.TEACHER_LIST, JSON.stringify(teacherList));
+            }
+
+            alert('✅ 注册成功！请登录');
+            registerModal.style.display = 'none';
+        });
+
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal-overlay')) {
+                event.target.style.display = 'none';
+            }
+        };
+    </script>
+</body>
+</html>

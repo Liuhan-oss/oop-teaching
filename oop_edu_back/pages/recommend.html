@@ -1,0 +1,279 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>个性化学习推荐</title>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+  }
+
+  body {
+    background: linear-gradient(135deg, #f0f4ff 0%, #e1e8ff 100%);
+    min-height: 100vh;
+    padding: 30px 20px;
+  }
+
+  .container {
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .page-header h1 {
+    font-size: 32px;
+    color: #2c3e50;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .page-header p {
+    color: #7f8c8d;
+    font-size: 16px;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 32px rgba(0, 0, 0, 0.1);
+  }
+
+  .card-title {
+    font-size: 20px;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-title::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: #4a7cf0;
+    border-radius: 2px;
+  }
+
+  .weak-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .weak-tag {
+    display: inline-flex;
+    align-items: center;
+    padding: 8px 16px;
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: #b91c1c;
+    border-radius: 24px;
+    font-size: 14px;
+    font-weight: 500;
+    transition: all 0.2s;
+  }
+
+  .weak-tag:hover {
+    background: linear-gradient(135deg, #fecaca, #fca5a5);
+    transform: scale(1.05);
+  }
+
+  .course-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .course-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 16px;
+    background: #f8fafc;
+    border-radius: 12px;
+    transition: background 0.2s;
+  }
+
+  .course-item:hover {
+    background: #f1f5f9;
+  }
+
+  .course-info {
+    flex: 1;
+  }
+
+  .course-name {
+    font-weight: 600;
+    color: #1e293b;
+    font-size: 16px;
+    margin-bottom: 4px;
+  }
+
+  .course-reason {
+    font-size: 13px;
+    color: #64748b;
+  }
+
+  .btn-view {
+    padding: 10px 20px;
+    background: linear-gradient(90deg, #4a7cf0, #5b8aff);
+    color: #fff;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    font-size: 14px;
+    font-weight: 500;
+    transition: transform 0.2s;
+  }
+
+  .btn-view:hover {
+    transform: translateY(-2px);
+  }
+
+  .graph-tips {
+    background: linear-gradient(135deg, #e0f2fe, #bae6fd);
+    color: #0369a1;
+    padding: 16px;
+    border-radius: 12px;
+    font-size: 15px;
+    line-height: 1.7;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: #94a3b8;
+    font-size: 15px;
+  }
+
+  .loading {
+    text-align: center;
+    padding: 60px 20px;
+    color: #4a7cf0;
+    font-size: 18px;
+  }
+</style>
+</head>
+
+<body>
+<div class="container">
+  <div class="page-header">
+    <h1>🎯 个性化学习推荐</h1>
+    <p>基于你的作业错题，智能匹配薄弱知识点与专项课程</p>
+  </div>
+
+  <div class="card">
+    <div class="card-title">⚠️ 你的薄弱知识点</div>
+    <div class="weak-tags" id="weakTags"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📚 专项提升课程推荐</div>
+    <div class="course-list" id="recommendCourses"></div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🧠 知识图谱重点学习</div>
+    <div id="graphTips" class="graph-tips"></div>
+  </div>
+</div>
+
+<script>
+axios.defaults.baseURL = 'http://127.0.0.1:5000';
+axios.defaults.withCredentials = true;
+
+// 获取当前学生姓名（演示用，实际可从登录态获取）
+const studentName = new URLSearchParams(location.search).get('username') || '2024215612';
+
+// 加载推荐数据（新增加载状态 + 兜底逻辑）
+async function loadRecommend() {
+  // 1. 初始化加载状态
+  const weakTagsEl = document.getElementById('weakTags');
+  const coursesEl = document.getElementById('recommendCourses');
+  const graphTipsEl = document.getElementById('graphTips');
+  
+  weakTagsEl.innerHTML = '<div class="loading">正在分析你的学习数据...</div>';
+  coursesEl.innerHTML = '<div class="loading">正在匹配专项课程...</div>';
+  graphTipsEl.innerText = '正在生成学习建议...';
+
+  try {
+    // 2. 调用推荐接口
+    const res = await axios.post('/api/recommend', { student_name: studentName });
+    const data = res.data.data;
+    renderData(data); // 渲染真实数据
+  } catch (err) {
+    // 3. 接口失败：使用默认演示数据（比赛兜底）
+    console.error('加载推荐数据失败:', err);
+    const defaultData = {
+      weak_knowledge: ['多态', '继承', '接口'],
+      recommend_courses: [
+        { id: 1, name: 'OOP三大特性详解', filename: 'oop_features.pdf', reason: '薄弱知识点「多态、继承」专项提升' },
+        { id: 3, name: '抽象类与接口', filename: 'abstract_interface.pdf', reason: '薄弱知识点「接口」专项提升' }
+      ],
+      recommend_graph: ['多态', '继承', '接口']
+    };
+    renderData(defaultData);
+  }
+}
+
+// 单独封装渲染函数（复用真实/默认数据）
+function renderData(data) {
+  const weakTagsEl = document.getElementById('weakTags');
+  const coursesEl = document.getElementById('recommendCourses');
+  const graphTipsEl = document.getElementById('graphTips');
+
+  // 渲染薄弱知识点
+  if (data.weak_knowledge && data.weak_knowledge.length > 0) {
+    weakTagsEl.innerHTML = data.weak_knowledge.map(tag => 
+      `<span class="weak-tag">${tag}</span>`
+    ).join('');
+  } else {
+    weakTagsEl.innerHTML = '<div class="empty-state">暂无薄弱知识点，继续保持！</div>';
+  }
+
+  // 渲染推荐课程
+  if (data.recommend_courses && data.recommend_courses.length > 0) {
+    coursesEl.innerHTML = data.recommend_courses.map(course => `
+      <div class="course-item">
+        <div class="course-info">
+          <div class="course-name">${course.name}</div>
+          <div class="course-reason">${course.reason}</div>
+        </div>
+        <button class="btn-view" onclick="window.open('/uploads/${course.filename}')">查看课件</button>
+      </div>
+    `).join('');
+  } else {
+    coursesEl.innerHTML = '<div class="empty-state">暂无推荐课程</div>';
+  }
+
+  // 渲染图谱学习提示
+  if (data.recommend_graph && data.recommend_graph.length > 0) {
+    graphTipsEl.innerText = `请重点学习知识图谱中的「${data.recommend_graph.join('、')}」节点，这些是你当前的核心薄弱项！`;
+  } else {
+    graphTipsEl.innerText = '你的知识点掌握情况良好，可自由浏览知识图谱巩固学习！';
+  }
+}
+
+// 初始化
+loadRecommend();
+</script>
+</body>
+</html>

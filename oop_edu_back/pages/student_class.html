@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>学生加入班级</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: sans-serif; max-width: 600px; margin: 20px auto; }
+        .card { border: 1px solid #eee; padding: 16px; border-radius: 8px; }
+        button { padding: 8px 16px; margin: 5px; cursor: pointer; }
+        input { padding: 8px; margin: 5px; }
+    </style>
+</head>
+<body>
+    <h2>我的班级</h2>
+    <div id="myClass" class="card"></div>
+
+    <h3>加入班级</h3>
+    <input type="text" id="joinCode" placeholder="输入班级码">
+    <button id="joinBtn">加入班级</button>
+
+    <script>
+        axios.defaults.baseURL = 'http://127.0.0.1:5000';
+        const username = '2024215612'; // 学生账号
+        const role = 'student';
+
+        // 加载我的班级
+        async function loadMyClass() {
+            const res = await axios.post('/api/student/class', { username, role });
+            const el = document.getElementById('myClass');
+            if (res.data.id) {
+                el.innerHTML = `
+                    <h4>${res.data.name}</h4>
+                    <p>授课教师：${res.data.teacher}</p>
+                `;
+            } else {
+                el.innerHTML = '<p>暂未加入任何班级</p>';
+            }
+        }
+
+        // 加入班级
+        document.getElementById('joinBtn').onclick = async () => {
+            const code = document.getElementById('joinCode').value;
+            const res = await axios.post('/api/class/join', { username, role, class_code: code });
+            alert(res.data.msg);
+            loadMyClass();
+        };
+
+        // 页面加载时执行
+        loadMyClass();
+    </script>
+</body>
+</html>

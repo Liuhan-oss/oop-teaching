@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>个人设置</title>
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Microsoft YaHei", "PingFang SC", Arial, sans-serif;
+  }
+
+  body {
+    background: linear-gradient(135deg, #f0f4ff 0%, #e1e8ff 100%);
+    min-height: 100vh;
+    padding: 30px 20px;
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+  }
+
+  .page-header {
+    text-align: center;
+    margin-bottom: 36px;
+  }
+
+  .page-header h1 {
+    font-size: 32px;
+    color: #2c3e50;
+    margin-bottom: 12px;
+    font-weight: 600;
+  }
+
+  .card {
+    background: #ffffff;
+    border-radius: 20px;
+    padding: 28px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+  }
+
+  .card-title {
+    font-size: 20px;
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .card-title::before {
+    content: '';
+    width: 4px;
+    height: 20px;
+    background: #4a7cf0;
+    border-radius: 2px;
+  }
+
+  .avatar-section {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  .avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid #4a7cf0;
+  }
+
+  /* 新增：头像上传按钮样式 */
+  .avatar-btn {
+    margin-top: 10px;
+    padding: 8px 16px;
+    background: #f1f5f9;
+    color: #475569;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background 0.2s;
+  }
+  .avatar-btn:hover {
+    background: #e2e8f0;
+  }
+
+  .form-group {
+    margin-bottom: 20px;
+  }
+
+  .form-label {
+    display: block;
+    font-size: 14px;
+    color: #64748b;
+    margin-bottom: 8px;
+  }
+
+  .form-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    font-size: 15px;
+    transition: border-color 0.3s;
+  }
+
+  .form-input:focus {
+    outline: none;
+    border-color: #4a7cf0;
+  }
+
+  .btn {
+    padding: 12px 24px;
+    background: linear-gradient(90deg, #4a7cf0, #5b8aff);
+    color: #fff;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    transition: transform 0.2s;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background: #f1f5f9;
+    color: #475569;
+  }
+
+  .btn-secondary:hover {
+    background: #e2e8f0;
+  }
+
+  .alert {
+    padding: 12px 16px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+    font-size: 14px;
+  }
+
+  .alert-success {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .alert-error {
+    background: #fee2e2;
+    color: #b91c1c;
+  }
+</style>
+</head>
+
+<body>
+<div class="container">
+  <div class="page-header">
+    <h1>⚙️ 个人设置</h1>
+  </div>
+
+  <div class="card">
+    <div class="card-title">👤 个人信息</div>
+    <div class="avatar-section">
+      <!-- 核心修正：去掉img前的多余空格，修复标签格式 -->
+      <img id="avatar" class="avatar" src="https://via.placeholder.com/120" alt="头像">
+      <div>
+        <div id="nickname" style="font-size: 18px; font-weight: 600; color: #1e293b; margin-bottom: 4px;"></div>
+        <div id="role" style="font-size: 14px; color: #64748b;"></div>
+        <!-- 新增：头像上传按钮 -->
+        <button class="avatar-btn" id="upload-avatar-btn">更换头像</button>
+        <input type="file" id="avatar-file" accept="image/*" style="display: none;">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🔐 修改密码</div>
+    <div id="alert"></div>
+    <div class="form-group">
+      <label class="form-label">原密码</label>
+      <input type="password" id="oldPwd" class="form-input" placeholder="请输入原密码">
+    </div>
+    <div class="form-group">
+      <label class="form-label">新密码</label>
+      <input type="password" id="newPwd" class="form-input" placeholder="请输入新密码">
+    </div>
+    <div class="form-group">
+      <label class="form-label">确认新密码</label>
+      <input type="password" id="confirmPwd" class="form-input" placeholder="请再次输入新密码">
+    </div>
+    <button class="btn" onclick="changePassword()">确认修改</button>
+  </div>
+</div>
+
+<script>
+axios.defaults.baseURL = 'http://127.0.0.1:5000';
+axios.defaults.withCredentials = true;
+
+const username = new URLSearchParams(location.search).get('username') || '2024215612';
+
+// 加载用户信息
+async function loadUserInfo() {
+  try {
+    const res = await axios.get('/api/user/info', { params: { username } });
+    const data = res.data.data;
+    document.getElementById('avatar').src = data.avatar;
+    document.getElementById('nickname').innerText = data.nickname;
+    document.getElementById('role').innerText = data.role === 'student' ? '学生' : '教师';
+  } catch (err) {
+    console.error('加载用户信息失败:', err);
+  }
+}
+
+// 修改密码
+async function changePassword() {
+  const oldPwd = document.getElementById('oldPwd').value;
+  const newPwd = document.getElementById('newPwd').value;
+  const confirmPwd = document.getElementById('confirmPwd').value;
+  const alertEl = document.getElementById('alert');
+
+  if (!oldPwd || !newPwd || !confirmPwd) {
+    showAlert('请填写完整信息', 'error');
+    return;
+  }
+
+  if (newPwd !== confirmPwd) {
+    showAlert('两次输入的新密码不一致', 'error');
+    return;
+  }
+
+  try {
+    const res = await axios.post('/api/user/change_pwd', {
+      username,
+      old_pwd: oldPwd,
+      new_pwd: newPwd
+    });
+
+    if (res.data.code === 200) {
+      showAlert('密码修改成功', 'success');
+      document.getElementById('oldPwd').value = '';
+      document.getElementById('newPwd').value = '';
+      document.getElementById('confirmPwd').value = '';
+    } else {
+      showAlert(res.data.msg || '修改失败', 'error');
+    }
+  } catch (err) {
+    showAlert('网络错误，请稍后重试', 'error');
+  }
+}
+
+// 新增：头像上传预览功能
+document.getElementById('upload-avatar-btn').addEventListener('click', function() {
+  document.getElementById('avatar-file').click();
+});
+
+document.getElementById('avatar-file').addEventListener('change', function(e) {
+  const file = e.target.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(event) {
+      // 实时预览选择的头像
+      document.getElementById('avatar').src = event.target.result;
+    };
+    reader.readAsDataURL(file);
+  }
+});
+
+function showAlert(msg, type) {
+  const alertEl = document.getElementById('alert');
+  alertEl.className = `alert alert-${type}`;
+  alertEl.innerText = msg;
+  setTimeout(() => {
+    alertEl.className = '';
+    alertEl.innerText = '';
+  }, 3000);
+}
+
+// 初始化
+loadUserInfo();
+</script>
+</body>
+</html>

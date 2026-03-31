@@ -1,0 +1,2532 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <base href="/pages/">
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>教师中心 · OOP智慧教学平台</title>
+    <!-- 字体与图标库 -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- ECharts -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/echarts/5.4.3/echarts.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jieba/0.12.1/jieba.min.js"></script>
+    <style>
+        /* ==================== 全局样式 ==================== */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+        
+        body {
+            display: flex;
+            height: 100vh;
+            background: linear-gradient(145deg, #0b1120 0%, #0f172a 100%);
+            overflow: hidden;
+            color: #e2e8f0;
+        }
+
+        /* ==================== 自定义滚动条 ==================== */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e293b;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b82f6;
+            border-radius: 10px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #2563eb;
+        }
+
+        /* ==================== 侧边栏样式 ==================== */
+        .sidebar {
+            width: 260px;
+            background: rgba(15, 23, 42, 0.8);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            color: #fff;
+            padding: 28px 0;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 8px 0 30px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 10;
+        }
+
+        .sidebar-logo {
+            text-align: center;
+            padding: 0 20px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            margin-bottom: 18px;
+        }
+        
+        .sidebar-logo h3 {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 1px;
+            background: linear-gradient(135deg, #fff 0%, #a5b4fc 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .sidebar-logo p {
+            font-size: 12px;
+            color: #64748b;
+            margin-top: 6px;
+        }
+
+        .sidebar-menu {
+            flex: 1;
+            padding: 0 12px;
+        }
+
+        .menu-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 16px;
+            border-radius: 14px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            margin-bottom: 4px;
+            transition: all 0.2s ease;
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .menu-item i {
+            width: 22px;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.4);
+            transition: all 0.2s ease;
+        }
+
+        .menu-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            transform: translateX(4px);
+        }
+
+        .menu-item:hover i {
+            color: #3b82f6;
+        }
+
+        .menu-item.active {
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .menu-item.active i {
+            color: #fff;
+        }
+
+        /* ==================== 主内容区样式 ==================== */
+        .main {
+            flex: 1;
+            padding: 32px 36px;
+            overflow-y: auto;
+            background: rgba(15, 23, 42, 0.4);
+        }
+
+        /* ==================== 标题样式 ==================== */
+        .page-title {
+            font-size: 32px;
+            color: #fff;
+            margin-bottom: 32px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            letter-spacing: -0.5px;
+        }
+
+        .page-title::before {
+            content: '';
+            width: 6px;
+            height: 32px;
+            background: linear-gradient(to bottom, #3b82f6, #8b5cf6);
+            border-radius: 3px;
+        }
+
+        .page-title i {
+            color: #3b82f6;
+            font-size: 28px;
+        }
+
+        /* ==================== 卡片样式 ==================== */
+        .glass-card {
+            background: rgba(30, 41, 59, 0.6);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 24px;
+            padding: 28px;
+            margin-bottom: 24px;
+            box-shadow: 0 20px 35px -10px rgba(0, 0, 0, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:hover {
+            border-color: rgba(59, 130, 246, 0.3);
+            transform: translateY(-2px);
+            box-shadow: 0 25px 45px -12px #3b82f6;
+        }
+
+        .card-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .card-title i {
+            color: #3b82f6;
+            font-size: 20px;
+        }
+
+        /* ==================== 按钮样式 ==================== */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 14px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(90deg, #3b82f6, #2563eb);
+            color: #fff;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            color: #e2e8f0;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: #3b82f6;
+        }
+
+        .btn-success {
+            background: linear-gradient(90deg, #10b981, #059669);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: linear-gradient(90deg, #ef4444, #dc2626);
+            color: #fff;
+        }
+
+        .btn-warning {
+            background: linear-gradient(90deg, #f59e0b, #d97706);
+            color: #fff;
+        }
+
+        /* ==================== 头像样式 ==================== */
+        .avatar-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .avatar {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #1e293b, #0f172a);
+            border: 3px solid #3b82f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #3b82f6;
+            margin-bottom: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .avatar:hover {
+            transform: scale(1.05);
+            border-color: #8b5cf6;
+            box-shadow: 0 0 30px #3b82f6;
+        }
+
+        .avatar img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* ==================== 表单样式 ==================== */
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 12px 18px;
+            margin: 8px 0 16px;
+            background: rgba(255, 255, 255, 0.03);
+            border: 1.5px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            font-size: 14px;
+            color: #fff;
+            transition: all 0.2s ease;
+        }
+
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: #3b82f6;
+            background: rgba(59, 130, 246, 0.05);
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+        }
+
+        .form-input::placeholder, .form-textarea::placeholder {
+            color: #475569;
+        }
+
+        .form-select {
+            color: #94a3b8;
+        }
+
+        .form-select option {
+            background: #1e293b;
+            color: #fff;
+        }
+
+        /* ==================== 表格样式 ==================== */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            text-align: left;
+            padding: 12px 8px;
+            color: #94a3b8;
+            font-weight: 500;
+            font-size: 13px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .data-table td {
+            padding: 12px 8px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+        }
+
+        .data-table tr:hover td {
+            background: rgba(59, 130, 246, 0.05);
+        }
+
+        /* ==================== 统计卡片 ==================== */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            margin-bottom: 24px;
+        }
+
+        .stat-card {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 20px;
+            padding: 20px;
+        }
+
+        .stat-card .stat-label {
+            color: #94a3b8;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .stat-card .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #3b82f6;
+        }
+
+        /* ==================== 知识点标签 ==================== */
+        .knowledge-tag {
+            display: inline-flex;
+            align-items: center;
+            padding: 4px 12px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            border-radius: 30px;
+            font-size: 12px;
+            margin: 0 4px 4px 0;
+        }
+
+        .mastery-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .mastery-high {
+            background: rgba(16, 185, 129, 0.2);
+            color: #10b981;
+        }
+
+        .mastery-medium {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+        }
+
+        .mastery-low {
+            background: rgba(245, 158, 11, 0.2);
+            color: #f59e0b;
+        }
+
+        .mastery-poor {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        /* ==================== 模态框 ==================== */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .modal-content {
+            width: 90%;
+            max-width: 600px;
+            background: #1e293b;
+            border-radius: 32px;
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            padding: 32px;
+            animation: modalFadeIn 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-lg {
+            max-width: 800px;
+        }
+
+        @keyframes modalFadeIn {
+            from {
+                opacity: 0;
+                transform: scale(0.95) translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0);
+            }
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .modal-header h3 {
+            font-size: 22px;
+            color: #fff;
+            font-weight: 600;
+        }
+
+        .close-modal {
+            width: 40px;
+            height: 40px;
+            border-radius: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border: none;
+            color: #94a3b8;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .close-modal:hover {
+            background: rgba(239, 68, 68, 0.2);
+            color: #ef4444;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 24px;
+        }
+
+        /* ==================== 图表容器 ==================== */
+        .chart-container {
+            width: 100%;
+            height: 300px;
+            margin: 16px 0;
+        }
+
+        /* ==================== 进度条 ==================== */
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        /* ==================== 加载动画 ==================== */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            padding: 40px;
+            color: #3b82f6;
+        }
+
+        .loading i {
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ==================== 响应式 ==================== */
+        @media (max-width: 768px) {
+            body {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                height: auto;
+                flex-direction: row;
+                padding: 10px;
+            }
+            .sidebar-menu {
+                display: flex;
+                overflow-x: auto;
+            }
+            .menu-item {
+                white-space: nowrap;
+            }
+            .main {
+                padding: 20px;
+            }
+            .stat-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- ==================== 侧边栏 ==================== -->
+    <div class="sidebar">
+        <div class="sidebar-logo">
+            <h3>OOP 教师平台</h3>
+            <p>基于七章知识图谱</p>
+        </div>
+        <div class="sidebar-menu">
+            <div class="menu-item active" onclick="loadDashboard()">
+                <i class="fas fa-chart-pie"></i>
+                <span>数据总览</span>
+            </div>
+            <div class="menu-item" onclick="loadClassAnalysis()">
+                <i class="fas fa-chart-line"></i>
+                <span>班级学情</span>
+            </div>
+            <div class="menu-item" onclick="loadHomeworkManage()">
+                <i class="fas fa-pen-to-square"></i>
+                <span>作业管理</span>
+            </div>
+            <div class="menu-item" onclick="loadKnowledgeManage()">
+                <i class="fas fa-project-diagram"></i>
+                <span>知识点管理</span>
+            </div>
+            <div class="menu-item" onclick="loadVideoManage()">
+                <i class="fas fa-video"></i>
+                <span>视频管理</span>
+            </div>
+            <div class="menu-item" onclick="loadStudentList()">
+                <i class="fas fa-users"></i>
+                <span>学生管理</span>
+            </div>
+            <div class="menu-item" onclick="loadClassManage()">
+                <i class="fas fa-layer-group"></i>
+                <span>班级管理</span>
+            </div>
+            <div class="menu-item" onclick="loadRanking()">
+                <i class="fas fa-trophy"></i>
+                <span>作业排名</span>
+            </div>
+            <div class="menu-item" onclick="loadAICorrection()">
+                <i class="fas fa-robot"></i>
+                <span>AI批改记录</span>
+            </div>
+            <div class="menu-item" onclick="loadMessage()">
+                <i class="fas fa-bell"></i>
+                <span>消息通知</span>
+            </div>
+            <div class="menu-item" onclick="loadSettings()">
+                <i class="fas fa-gear"></i>
+                <span>个人设置</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 主内容区 ==================== -->
+    <div class="main">
+        <div class="page-title" id="pageTitle">
+            <i class="fas fa-chart-pie"></i>
+            数据总览
+        </div>
+        <div id="content"></div>
+    </div>
+
+    <!-- ==================== 发布作业模态框 ==================== -->
+    <div class="modal" id="homeworkModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="modalTitle">发布新作业</h3>
+                <button class="close-modal" onclick="closeModal('homeworkModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <input type="text" id="hwTitle" class="form-input" placeholder="作业标题">
+            <textarea id="hwContent" class="form-textarea" rows="4" placeholder="作业内容"></textarea>
+            <input type="text" id="hwTag" class="form-input" placeholder="知识点标签（用逗号分隔）">
+            <select id="hwClass" class="form-select">
+                <option value="">选择班级</option>
+            </select>
+            <input type="datetime-local" id="hwDeadline" class="form-input">
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="publishHomework()">
+                    <i class="fas fa-paper-plane"></i> 发布
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal('homeworkModal')">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 上传视频模态框 ==================== -->
+    <div class="modal" id="videoModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>上传教学视频</h3>
+                <button class="close-modal" onclick="closeModal('videoModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <input type="text" id="videoTitle" class="form-input" placeholder="视频标题">
+            <textarea id="videoDesc" class="form-textarea" rows="3" placeholder="视频描述"></textarea>
+            <input type="text" id="videoTag" class="form-input" placeholder="知识点标签">
+            <select id="videoClass" class="form-select">
+                <option value="">选择班级（可选）</option>
+            </select>
+            <div class="form-input" style="padding: 30px; text-align: center; cursor: pointer;" onclick="document.getElementById('videoFile').click()">
+                <i class="fas fa-cloud-upload-alt" style="font-size: 48px; color: #3b82f6; margin-bottom: 12px;"></i>
+                <p>点击上传视频文件</p>
+                <p style="font-size: 12px; color: #64748b;">支持MP4格式</p>
+                <input type="file" id="videoFile" accept="video/mp4" style="display: none;" onchange="previewVideoFile(this)">
+            </div>
+            <div id="videoFileName" style="color: #10b981; margin-bottom: 16px; display: none;"></div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="uploadVideo()">
+                    <i class="fas fa-upload"></i> 上传
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal('videoModal')">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 创建班级模态框 ==================== -->
+    <div class="modal" id="classModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>创建新班级</h3>
+                <button class="close-modal" onclick="closeModal('classModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <input type="text" id="className" class="form-input" placeholder="班级名称（如：软件工程1班）">
+            <input type="text" id="classCourse" class="form-input" value="面向对象程序设计" placeholder="关联课程">
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="createClass()">
+                    <i class="fas fa-check"></i> 创建
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal('classModal')">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 添加学生模态框 ==================== -->
+    <div class="modal" id="studentModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>添加学生</h3>
+                <button class="close-modal" onclick="closeModal('studentModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <input type="text" id="studentId" class="form-input" placeholder="学号（如：2024215612）">
+            <input type="text" id="studentName" class="form-input" placeholder="姓名">
+            <select id="studentClass" class="form-select">
+                <option value="">选择班级</option>
+            </select>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="addStudent()">
+                    <i class="fas fa-user-plus"></i> 添加
+                </button>
+                <button class="btn btn-secondary" onclick="closeModal('studentModal')">
+                    <i class="fas fa-times"></i> 取消
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== 批改作业模态框 ==================== -->
+    <div class="modal" id="gradeModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="gradeTitle">批改作业</h3>
+                <button class="close-modal" onclick="closeModal('gradeModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="gradeContent"></div>
+        </div>
+    </div>
+
+    <!-- ==================== 学生详情模态框 ==================== -->
+    <div class="modal" id="studentDetailModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="studentDetailName">学生详情</h3>
+                <button class="close-modal" onclick="closeModal('studentDetailModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="studentDetailContent"></div>
+        </div>
+    </div>
+
+    <!-- ==================== 视频预览模态框 ==================== -->
+    <div class="modal" id="videoPreviewModal">
+        <div class="modal-content modal-lg">
+            <div class="modal-header">
+                <h3 id="previewVideoTitle">视频预览</h3>
+                <button class="close-modal" onclick="closeModal('videoPreviewModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <video id="videoPlayer" controls style="width: 100%; border-radius: 16px;">
+                <source src="" type="video/mp4">
+            </video>
+        </div>
+    </div>
+
+    <!-- ==================== 头像预览模态框 ==================== -->
+    <div class="modal" id="avatarModal">
+        <div class="modal-content" style="max-width: 400px;">
+            <div class="modal-header">
+                <h3>预览头像</h3>
+                <button class="close-modal" onclick="closeModal('avatarModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div style="text-align: center; padding: 20px;">
+                <img id="avatarPreview" src="" style="width: 200px; height: 200px; border-radius: 50%; border: 4px solid #3b82f6;">
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-primary" onclick="confirmAvatar()">确认上传</button>
+                <button class="btn btn-secondary" onclick="closeModal('avatarModal')">重新选择</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==================== PPT知识点数据（来自七章PPT）====================
+        const PPT_KNOWLEDGE_NODES = [
+            // 第一章：C++语言编程入门
+            { id: "cpp_origin", name: "C++语言产生", category: 0, size: 55, difficulty: 1, chapter: 1, 
+              description: "由AT&T贝尔实验室Bjarne Stroustrup博士在C语言基础上开发" },
+            { id: "cpp_vs_c", name: "C++与C语言关系", category: 0, size: 50, difficulty: 1, chapter: 1, 
+              description: "C++兼容C语言，增加了面向对象特性" },
+            { id: "development_steps", name: "开发步骤", category: 0, size: 45, difficulty: 1, chapter: 1, 
+              description: "编辑→编译→链接→运行" },
+            { id: "lexical_tokens", name: "词法记号", category: 0, size: 52, difficulty: 2, chapter: 1, 
+              description: "关键字、标识符、运算符、分隔符、常量、注释符" },
+            { id: "data_types", name: "数据类型", category: 0, size: 60, difficulty: 2, chapter: 1, 
+              description: "char、int、float、double、void" },
+            { id: "variables", name: "变量", category: 0, size: 48, difficulty: 2, chapter: 1, 
+              description: "声明格式：数据类型 变量名" },
+            { id: "constants", name: "常量", category: 0, size: 45, difficulty: 1, chapter: 1, 
+              description: "整型常量、字符常量、字符串常量、符号常量" },
+            { id: "arrays", name: "数组", category: 0, size: 55, difficulty: 2, chapter: 1, 
+              description: "一维、二维、多维数组，字符数组与字符串" },
+            { id: "operators", name: "运算符", category: 0, size: 58, difficulty: 2, chapter: 1, 
+              description: "算术、关系、逻辑、赋值、sizeof、条件运算符" },
+            { id: "expressions", name: "表达式", category: 0, size: 50, difficulty: 2, chapter: 1, 
+              description: "算术表达式、赋值表达式、逗号表达式" },
+            { id: "type_conversion", name: "类型转换", category: 0, size: 42, difficulty: 2, chapter: 1, 
+              description: "隐含转换、强制转换" },
+            { id: "control_statements", name: "控制语句", category: 0, size: 56, difficulty: 2, chapter: 1, 
+              description: "if、switch、while、do-while、for、break、continue" },
+            
+            // 第二章：函数
+            { id: "function_definition", name: "函数定义", category: 1, size: 58, difficulty: 2, chapter: 2, 
+              description: "类型、函数名、参数表、函数体" },
+            { id: "function_declaration", name: "函数声明", category: 1, size: 52, difficulty: 2, chapter: 2, 
+              description: "函数原型" },
+            { id: "function_call", name: "函数调用", category: 1, size: 54, difficulty: 2, chapter: 2, 
+              description: "实参、形参" },
+            { id: "parameter_passing", name: "参数传递", category: 1, size: 56, difficulty: 2, chapter: 2, 
+              description: "传值、传址" },
+            { id: "return_value", name: "返回值", category: 1, size: 48, difficulty: 1, chapter: 2, 
+              description: "return语句" },
+            { id: "inline_function", name: "内联函数", category: 1, size: 42, difficulty: 2, chapter: 2, 
+              description: "inline关键字" },
+            { id: "default_parameters", name: "默认形参值", category: 1, size: 45, difficulty: 2, chapter: 2, 
+              description: "从右向左设置默认值" },
+            { id: "scope", name: "作用域", category: 1, size: 50, difficulty: 2, chapter: 2, 
+              description: "全局、局部、块作用域、函数作用域" },
+            { id: "recursion", name: "递归调用", category: 1, size: 55, difficulty: 3, chapter: 2, 
+              description: "函数调用自身" },
+            { id: "function_overloading", name: "函数重载", category: 1, size: 60, difficulty: 3, chapter: 2, 
+              description: "参数列表不同，同名函数" },
+            
+            // 第三章：类与对象
+            { id: "class_declaration", name: "类的声明", category: 2, size: 65, difficulty: 3, chapter: 3, 
+              description: "class、public、protected、private" },
+            { id: "object_declaration", name: "对象的声明", category: 2, size: 58, difficulty: 3, chapter: 3, 
+              description: "类名 对象名" },
+            { id: "constructor", name: "构造函数", category: 2, size: 62, difficulty: 3, chapter: 3, 
+              description: "与类同名、可重载、可设默认参数" },
+            { id: "destructor", name: "析构函数", category: 2, size: 58, difficulty: 3, chapter: 3, 
+              description: "~类名" },
+            { id: "class_composition", name: "类的组合", category: 2, size: 55, difficulty: 3, chapter: 3, 
+              description: "对象成员" },
+            { id: "static_members", name: "静态成员", category: 2, size: 54, difficulty: 3, chapter: 3, 
+              description: "static数据成员、static成员函数" },
+            { id: "friend", name: "友元", category: 2, size: 50, difficulty: 3, chapter: 3, 
+              description: "friend函数、friend类" },
+            
+            // 第四章：指针与引用
+            { id: "pointer_declaration", name: "指针声明", category: 1, size: 56, difficulty: 3, chapter: 4, 
+              description: "数据类型 *标识符" },
+            { id: "pointer_operations", name: "指针运算", category: 1, size: 52, difficulty: 3, chapter: 4, 
+              description: "++、--、+、-" },
+            { id: "const_pointer", name: "const指针", category: 1, size: 50, difficulty: 3, chapter: 4, 
+              description: "指向常量的指针、指针常量" },
+            { id: "dynamic_memory", name: "动态内存分配", category: 1, size: 58, difficulty: 3, chapter: 4, 
+              description: "new、delete" },
+            { id: "reference", name: "引用", category: 1, size: 54, difficulty: 3, chapter: 4, 
+              description: "&，别名" },
+            
+            // 第五章：继承
+            { id: "inheritance", name: "继承", category: 2, size: 68, difficulty: 4, chapter: 5, 
+              description: "基类、派生类" },
+            { id: "single_inheritance", name: "单继承", category: 2, size: 62, difficulty: 3, chapter: 5, 
+              description: "一个派生类只有一个基类" },
+            { id: "multiple_inheritance", name: "多继承", category: 2, size: 65, difficulty: 4, chapter: 5, 
+              description: "一个派生类有多个基类" },
+            { id: "virtual_base", name: "虚基类", category: 2, size: 64, difficulty: 5, chapter: 5, 
+              description: "virtual继承，解决菱形继承" },
+            
+            // 第六章：运算符重载
+            { id: "operator_overloading", name: "运算符重载", category: 2, size: 66, difficulty: 4, chapter: 6, 
+              description: "operator关键字" },
+            { id: "unary_operator", name: "一元运算符重载", category: 2, size: 60, difficulty: 4, chapter: 6, 
+              description: "++、--、-、!、~" },
+            { id: "binary_operator", name: "二元运算符重载", category: 2, size: 62, difficulty: 4, chapter: 6, 
+              description: "+、-、*、/" },
+            
+            // 第七章：多态与虚函数
+            { id: "polymorphism", name: "多态性", category: 3, size: 70, difficulty: 5, chapter: 7, 
+              description: "编译时多态、运行时多态" },
+            { id: "virtual_function", name: "虚函数", category: 3, size: 68, difficulty: 5, chapter: 7, 
+              description: "virtual关键字" },
+            { id: "pure_virtual", name: "纯虚函数", category: 3, size: 64, difficulty: 5, chapter: 7, 
+              description: "virtual 函数名()=0" },
+            { id: "abstract_class", name: "抽象类", category: 3, size: 66, difficulty: 5, chapter: 7, 
+              description: "含纯虚函数的类，不能实例化" }
+        ];
+
+        // ==================== 全局变量 ====================
+        let currentUser = null;
+        let currentTeacher = null;
+        let classList = [];
+        let studentList = [];
+        let homeworkList = [];
+        let videoList = [];
+        let checkedHomework = [];
+
+        // ==================== 初始化 ====================
+        (function init() {
+            // 获取当前登录用户
+            currentUser = JSON.parse(localStorage.getItem('currentUser'));
+            if (!currentUser || currentUser.role !== 'teacher') {
+                window.location.href = '/pages/login.html';
+                return;
+            }
+
+            // 获取教师信息
+            const teacherList = JSON.parse(localStorage.getItem('teacherList') || '[]');
+            currentTeacher = teacherList.find(t => t.username === currentUser.username || t.id === currentUser.username);
+            if (!currentTeacher) {
+                currentTeacher = {
+                    id: currentUser.username,
+                    name: currentUser.name || '教师',
+                    avatar: null
+                };
+            }
+
+            // 加载数据
+            loadClassData();
+            loadStudentData();
+            loadHomeworkData();
+            loadVideoData();
+
+            // 加载首页
+            loadDashboard();
+        })();
+
+        // ==================== 数据加载函数 ====================
+        function loadClassData() {
+            classList = JSON.parse(localStorage.getItem('classList') || '[]');
+        }
+
+        function loadStudentData() {
+            studentList = JSON.parse(localStorage.getItem('studentList') || '[]');
+        }
+
+        function loadHomeworkData() {
+            homeworkList = JSON.parse(localStorage.getItem('homeworkList') || '[]');
+            checkedHomework = JSON.parse(localStorage.getItem('checkedHomework') || '[]');
+        }
+
+        function loadVideoData() {
+            videoList = JSON.parse(localStorage.getItem('videoList') || '[]');
+        }
+
+        // ==================== 工具函数 ====================
+        function setActiveMenuItem(element) {
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        function getClassById(classId) {
+            return classList.find(c => c.id === classId);
+        }
+
+        function getStudentById(studentId) {
+            return studentList.find(s => s.studentId === studentId || s.id === studentId);
+        }
+
+        function getStudentMastery(studentId, knowledgeId) {
+            const key = `mastery_${studentId}`;
+            const masteryData = JSON.parse(localStorage.getItem(key) || '{}');
+            if (!masteryData[knowledgeId]) return 70;
+            const errorCount = masteryData[knowledgeId].errorCount || 0;
+            return Math.max(30, 100 - errorCount * 8);
+        }
+
+        function getMasteryBadgeClass(level) {
+            if (level >= 80) return 'mastery-high';
+            if (level >= 60) return 'mastery-medium';
+            if (level >= 40) return 'mastery-low';
+            return 'mastery-poor';
+        }
+
+        // ==================== 数据总览 ====================
+        function loadDashboard() {
+            setActiveMenuItem(event.target);
+            document.getElementById('pageTitle').innerHTML = '<i class="fas fa-chart-pie"></i> 数据总览';
+
+            // 统计数据
+            const totalStudents = studentList.length;
+            const totalClasses = classList.length;
+            const totalHomeworks = homeworkList.length;
+            const totalVideos = videoList.length;
+            const totalSubmits = checkedHomework.length;
+
+            // 计算平均分
+            const avgScore = checkedHomework.length > 0 
+                ? Math.round(checkedHomework.reduce((sum, h) => sum + (h.totalScore || h.score || 0), 0) / checkedHomework.length)
+                : 0;
+
+            // 统计薄弱知识点（掌握度<60的学生数）
+            const weakStats = {};
+            PPT_KNOWLEDGE_NODES.forEach(node => {
+                let weakCount = 0;
+                studentList.forEach(s => {
+                    const level = getStudentMastery(s.studentId || s.id, node.id);
+                    if (level < 60) weakCount++;
+                });
+                if (weakCount > 0) {
+                    weakStats[node.name] = weakCount;
+                }
+            });
+
+            // 排序取前5
+            const topWeak = Object.entries(weakStats)
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5);
+
+            let weakHtml = '';
+            if (topWeak.length > 0) {
+                weakHtml = topWeak.map(([name, count]) => `
+                    <div style="margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                            <span>${name}</span>
+                            <span style="color: #ef4444;">${count}人薄弱</span>
+                        </div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${(count/totalStudents)*100}%; background: #ef4444;"></div>
+                        </div>
+                    </div>
+                `).join('');
+            } else {
+                weakHtml = '<div style="color: #94a3b8; text-align: center;">暂无薄弱知识点</div>';
+            }
+
+            let html = `
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">学生总数</div>
+                        <div class="stat-value">${totalStudents}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">班级数量</div>
+                        <div class="stat-value">${totalClasses}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">作业总数</div>
+                        <div class="stat-value">${totalHomeworks}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">平均分</div>
+                        <div class="stat-value">${avgScore}</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div class="glass-card">
+                        <div class="card-title">
+                            <i class="fas fa-exclamation-triangle"></i>
+                            薄弱知识点排行
+                        </div>
+                        ${weakHtml}
+                    </div>
+                    <div class="glass-card">
+                        <div class="card-title">
+                            <i class="fas fa-chart-bar"></i>
+                            作业提交统计
+                        </div>
+                        <div id="submitChart" style="height: 250px;"></div>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="card-title">
+                        <i class="fas fa-clock"></i>
+                        最近活动
+                    </div>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        ${checkedHomework.slice(-5).reverse().map(h => `
+                            <div style="padding: 12px; border-bottom: 1px solid rgba(255,255,255,0.05);">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span><span style="color: #3b82f6;">${h.studentName || h.studentId}</span> 提交了作业 <span style="color: #fff;">${h.homeworkTitle}</span></span>
+                                    <span style="color: #94a3b8; font-size: 12px;">${h.timestamp || ''}</span>
+                                </div>
+                                <div style="margin-top: 4px;">得分：<span style="color: #f59e0b; font-weight: 600;">${h.totalScore || h.score}分</span></div>
+                            </div>
+                        `).join('')}
+                        ${checkedHomework.length === 0 ? '<div style="color: #94a3b8; text-align: center;">暂无活动</div>' : ''}
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('content').innerHTML = html;
+
+            // 绘制提交统计图表
+            setTimeout(() => {
+                const chartDom = document.getElementById('submitChart');
+                if (!chartDom) return;
+
+                // 按作业分组统计提交人数
+                const submitStats = {};
+                homeworkList.slice(0, 5).forEach(hw => {
+                    const count = checkedHomework.filter(c => c.homeworkTitle === hw.title).length;
+                    submitStats[hw.title] = count;
+                });
+
+                const myChart = echarts.init(chartDom);
+                myChart.setOption({
+                    tooltip: { trigger: 'axis' },
+                    grid: { left: '10%', right: '5%', top: '15%', bottom: '10%' },
+                    xAxis: {
+                        type: 'category',
+                        data: Object.keys(submitStats),
+                        axisLabel: { color: '#94a3b8', rotate: 15 }
+                    },
+                    yAxis: {
+                        type: 'value',
+                        name: '提交人数',
+                        nameTextStyle: { color: '#94a3b8' },
+                        axisLabel: { color: '#94a3b8' }
+                    },
+                    series: [{
+                        data: Object.values(submitStats),
+                        type: 'bar',
+                        barWidth: 30,
+                        itemStyle: {
+                            color: '#3b82f6',
+                            borderRadius: [6, 6, 0, 0]
+                        },
+                        label: {
+                            show: true,
+                            position: 'top',
+                            color: '#fff'
+                        }
+                    }]
+                });
+            }, 100);
+        }
+
+        // ==================== 班级学情 ====================
+        function loadClassAnalysis() {
+            setActiveMenuItem(event.target);
+            document.getElementById('pageTitle').innerHTML = '<i class="fas fa-chart-line"></i> 班级学情';
+
+            if (classList.length === 0) {
+                document.getElementById('content').innerHTML = `
+                    <div class="glass-card" style="text-align: center; padding: 60px;">
+                        <i class="fas fa-users-slash" style="font-size: 60px; color: #3b82f6;"></i>
+                        <div style="color: #94a3b8; margin: 20px 0;">暂无班级，请先创建班级</div>
+                        <button class="btn btn-primary" onclick="openClassModal()">
+                            <i class="fas fa-plus"></i> 创建班级
+                        </button>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="glass-card">
+                    <div class="card-title">
+                        <i class="fas fa-school"></i>
+                        选择班级
+                    </div>
+                    <select id="classSelector" class="form-select" style="max-width: 300px;" onchange="renderClassAnalysis(this.value)">
+                        ${classList.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                    </select>
+                </div>
+                <div id="classAnalysisContent"></div>
+            `;
+
+            document.getElementById('content').innerHTML = html;
+            renderClassAnalysis(classList[0].id);
+        }
+
+        function renderClassAnalysis(classId) {
+            const currentClass = classList.find(c => c.id === classId);
+            if (!currentClass) return;
+
+            // 获取班级学生
+            const classStudents = studentList.filter(s => s.classId === classId);
+            const studentIds = classStudents.map(s => s.studentId || s.id);
+
+            // 获取班级作业
+            const classHomeworks = homeworkList.filter(h => h.class_id === classId);
+
+            // 获取班级提交记录
+            const classSubmits = checkedHomework.filter(c => studentIds.includes(c.studentId));
+
+            // 计算班级平均分
+            const avgScore = classSubmits.length > 0
+                ? Math.round(classSubmits.reduce((sum, s) => sum + (s.totalScore || s.score || 0), 0) / classSubmits.length)
+                : 0;
+
+            // 计算各知识点掌握度
+            const knowledgeMastery = {};
+            PPT_KNOWLEDGE_NODES.slice(0, 10).forEach(node => {
+                let total = 0;
+                let count = 0;
+                studentIds.forEach(sid => {
+                    const level = getStudentMastery(sid, node.id);
+                    total += level;
+                    count++;
+                });
+                knowledgeMastery[node.name] = count > 0 ? Math.round(total / count) : 70;
+            });
+
+            // 找出薄弱知识点（掌握度<60）
+            const weakPoints = Object.entries(knowledgeMastery)
+                .filter(([_, level]) => level < 60)
+                .map(([name]) => name);
+
+            let html = `
+                <div class="stat-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">学生人数</div>
+                        <div class="stat-value">${classStudents.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">作业总数</div>
+                        <div class="stat-value">${classHomeworks.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">提交次数</div>
+                        <div class="stat-value">${classSubmits.length}</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">平均分</div>
+                        <div class="stat-value">${avgScore}</div>
+                    </div>
+                </div>
+
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                    <div class="glass-card">
+                        <div class="card-title">
+                            <i class="fas fa-brain"></i>
+                            知识点掌握度
+                        </div>
+                        <div id="knowledgeChart" style="height: 300px;"></div>
+                    </div>
+                    <div class="glass-card">
+                        <div class="card-title">
+                            <i class="fas fa-exclamation-circle"></i>
+                            薄弱知识点
+                        </div>
+                        ${weakPoints.length > 0 ? 
+                            weakPoints.map(p => `
+                                <div style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); 
+                                          padding: 12px; border-radius: 12px; margin-bottom: 8px; color: #ef4444;">
+                                    <i class="fas fa-exclamation-triangle"></i> ${p}
+                                </div>
+                            `).join('') 
+                            : '<div style="color: #94a3b8;">暂无薄弱知识点</div>'}
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="card-title">
+                        <i class="fas fa-users"></i>
+                        学生列表
+                    </div>
+                    <table class="data-table">
+                        <tr>
+                            <th>姓名</th>
+                            <th>学号</th>
+                            <th>提交次数</th>
+                            <th>平均分</th>
+                            <th>薄弱知识点</th>
+                            <th>操作</th>
+                        </tr>
+                        ${classStudents.map(s => {
+                            const submits = classSubmits.filter(c => c.studentId === (s.studentId || s.id));
+                            const studentAvg = submits.length > 0 
+                                ? Math.round(submits.reduce((sum, c) => sum + (c.totalScore || c.score || 0), 0) / submits.length)
+                                : 0;
+                            
+                            // 找出该学生的薄弱点（掌握度<60）
+                            const studentWeak = PPT_KNOWLEDGE_NODES.filter(node => {
+                                const level = getStudentMastery(s.studentId || s.id, node.id);
+                                return level < 60;
+                            }).slice(0, 2).map(n => n.name).join(', ');
+
+                            return `
+                                <tr>
+                                    <td>${s.name}</td>
+                                    <td>${s.studentId || s.id}</td>
+                                    <td>${submits.length}</td>
+                                    <td><span style="color: #f59e0b;">${studentAvg}</span></td>
+                                    <td><span style="color: #ef4444;">${studentWeak || '无'}</span></td>
+                                    <td>
+                                        <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="viewStudentDetail('${s.studentId || s.id}')">
+                                            <i class="fas fa-eye"></i>
+                                        </button>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </table>
+                </div>
+            `;
+
+            document.getElementById('classAnalysisContent').innerHTML = html;
+
+            // 绘制知识点掌握度图表
+            setTimeout(() => {
+                const chartDom = document.getElementById('knowledgeChart');
+                if (!chartDom) return;
+
+                const myChart = echarts.init(chartDom);
+                myChart.setOption({
+                    tooltip: { trigger: 'axis' },
+                    radar: {
+                        indicator: Object.keys(knowledgeMastery).slice(0, 8).map(name => ({
+                            name: name,
+                            max: 100
+                        })),
+                        shape: 'circle',
+                        center: ['50%', '50%'],
+                        radius: '65%',
+                        name: { textStyle: { color: '#94a3b8' } }
+                    },
+                    series: [{
+                        type: 'radar',
+                        data: [{
+                            value: Object.values(knowledgeMastery).slice(0, 8),
+                            name: '班级掌握度',
+                            areaStyle: { color: 'rgba(59, 130, 246, 0.3)' },
+                            lineStyle: { color: '#3b82f6', width: 2 },
+                            itemStyle: { color: '#3b82f6' }
+                        }]
+                    }]
+                });
+            }, 100);
+        }
+
+        // ==================== 作业管理 ====================
+        function loadHomeworkManage() {
+            setActiveMenuItem(event.target);
+            document.getElementById('pageTitle').innerHTML = '<i class="fas fa-pen-to-square"></i> 作业管理';
+
+            let html = `
+                <div class="glass-card">
+                    <button class="btn btn-primary" onclick="openHomeworkModal()">
+                        <i class="fas fa-plus"></i> 发布新作业
+                    </button>
+                </div>
+            `;
+
+            if (homeworkList.length === 0) {
+                html += `
+                    <div class="glass-card" style="text-align: center; padding: 60px;">
+                        <i class="fas fa-pen-to-square" style="font-size: 60px; color: #3b82f6;"></i>
+                        <div style="color: #94a3b8; margin: 20px 0;">暂无作业，点击上方按钮发布</div>
+                    </div>
+                `;
+            } else {
+                // 按班级分组
+                const grouped = {};
+                homeworkList.forEach(hw => {
+                    const className = getClassById(hw.class_id)?.name || '未知班级';
+                    if (!grouped[className]) grouped[className] = [];
+                    grouped[className].push(hw);
+                });
+
+                for (let className in grouped) {
+                    html += `<div class="glass-card"><div class="card-title"><i class="fas fa-users"></i> ${className}</div>`;
+                    
+                    grouped[className].forEach(hw => {
+                        const submitCount = checkedHomework.filter(c => c.homeworkTitle === hw.title).length;
+                        const avgScore = checkedHomework.filter(c => c.homeworkTitle === hw.title)
+                            .reduce((sum, c) => sum + (c.totalScore || c.score || 0), 0) / (submitCount || 1);
+
+                        html += `
+                            <div style="background: rgba(255,255,255,0.02); padding: 20px; border-radius: 20px; margin-bottom: 16px;">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+                                    <div>
+                                        <span style="font-size: 16px; font-weight: 600; color: #fff;">${hw.title}</span>
+                                        <span class="knowledge-tag" style="margin-left: 12px;">${hw.knowledge_tag || '未分类'}</span>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-secondary" style="padding: 6px 12px;" onclick="editHomework('${hw.id}')">
+                                            <i class="fas fa-pen"></i>
+                                        </button>
+                                        <button class="btn btn-danger" style="padding: 6px 12px;" onclick="deleteHomework('${hw.id}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 24px; color: #94a3b8; font-size: 13px; margin-bottom: 12px;">
+                                    <span><i class="fas fa-clock"></i> 截止：${hw.deadline || '未设置'}</span>
+                                    <span><i class="fas fa-check-circle"></i> 提交：${submitCount}</span>
+                                    <span><i class="fas fa-star"></i> 平均分：${submitCount > 0 ? Math.round(avgScore) : '暂无'}</span>
+                                </div>
+                                <div>
+                                    <button class="btn btn-primary" style="padding: 6px 12px;" onclick="gradeHomework('${hw.id}')">
+                                        <i class="fas fa-check"></i> 批改
+                                    </button>
+                                    <button class="btn btn-secondary" style="padding: 6px 12px;" onclick="viewHomeworkSubmits('${hw.id}')">
+                                        <i class="fas fa-list"></i> 查看提交
+                                    </button>
+                                </div>
+                            </div>
+                        `;
+                    });
+                    
+                    html += '</div>';
+                }
+            }
+
+            document.getElementById('content').innerHTML = html;
+        }
+
+        function openHomeworkModal() {
+            const classOptions = classList.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+            document.getElementById('modalTitle').innerText = '发布新作业';
+            document.getElementById('hwTitle').value = '';
+            document.getElementById('hwContent').value = '';
+            document.getElementById('hwTag').value = '';
+            document.getElementById('hwClass').innerHTML = `<option value="">选择班级</option>${classOptions}`;
+            
+            // 默认截止日期为一周后
+            const d = new Date();
+            d.setDate(d.getDate() + 7);
+            document.getElementById('hwDeadline').value = d.toISOString().slice(0, 16);
+
+            document.getElementById('homeworkModal').style.display = 'flex';
+        }
+
+        function publishHomework() {
+            const title = document.getElementById('hwTitle').value.trim();
+            const content = document.getElementById('hwContent').value.trim();
+            const tag = document.getElementById('hwTag').value.trim();
+            const classId = document.getElementById('hwClass').value;
+            const deadline = document.getElementById('hwDeadline').value;
+
+            if (!title || !content || !classId || !deadline) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            const newHomework = {
+                id: 'hw_' + Date.now(),
+                title,
+                content,
+                knowledge_tag: tag,
+                class_id: classId,
+                username: currentTeacher.id,
+                deadline,
+                publishTime: new Date().toLocaleString()
+            };
+
+            homeworkList.push(newHomework);
+            localStorage.setItem('homeworkList', JSON.stringify(homeworkList));
+
+            // 发送通知给学生
+            const classStudents = studentList.filter(s => s.classId === classId);
+            classStudents.forEach(s => {
+                const key = `notifications_${s.studentId || s.id}`;
+                const notes = JSON.parse(localStorage.getItem(key) || '[]');
+                notes.push({
+                    id: Date.now() + Math.random(),
+                    title: '📢 新作业发布',
+                    content: `《${title}》已发布，截止日期：${deadline}`,
+                    time: new Date().toLocaleString()
+                });
+                localStorage.setItem(key, JSON.stringify(notes));
+            });
+
+            alert('✅ 作业发布成功');
+            closeModal('homeworkModal');
+            loadHomeworkManage();
+        }
+
+        function editHomework(hwId) {
+            const hw = homeworkList.find(h => h.id === hwId);
+            if (!hw) return;
+
+            const classOptions = classList.map(c => `<option value="${c.id}" ${c.id === hw.class_id ? 'selected' : ''}>${c.name}</option>`).join('');
+
+            document.getElementById('modalTitle').innerText = '编辑作业';
+            document.getElementById('hwTitle').value = hw.title;
+            document.getElementById('hwContent').value = hw.content;
+            document.getElementById('hwTag').value = hw.knowledge_tag || '';
+            document.getElementById('hwClass').innerHTML = `<option value="">选择班级</option>${classOptions}`;
+            document.getElementById('hwDeadline').value = hw.deadline || '';
+
+            document.getElementById('homeworkModal').style.display = 'flex';
+
+            // 覆盖发布函数
+            window.publishHomework = function() {
+                const title = document.getElementById('hwTitle').value.trim();
+                const content = document.getElementById('hwContent').value.trim();
+                const tag = document.getElementById('hwTag').value.trim();
+                const classId = document.getElementById('hwClass').value;
+                const deadline = document.getElementById('hwDeadline').value;
+
+                if (!title || !content || !classId || !deadline) {
+                    alert('请填写完整信息');
+                    return;
+                }
+
+                homeworkList = homeworkList.map(h => 
+                    h.id === hwId ? { ...h, title, content, knowledge_tag: tag, class_id: classId, deadline } : h
+                );
+                localStorage.setItem('homeworkList', JSON.stringify(homeworkList));
+
+                alert('✅ 作业修改成功');
+                closeModal('homeworkModal');
+                loadHomeworkManage();
+            };
+        }
+
+        function deleteHomework(hwId) {
+            if (!confirm('确定删除该作业吗？')) return;
+
+            homeworkList = homeworkList.filter(h => h.id !== hwId);
+            localStorage.setItem('homeworkList', JSON.stringify(homeworkList));
+
+            // 同时删除相关提交记录
+            const hw = homeworkList.find(h => h.id === hwId);
+            if (hw) {
+                checkedHomework = checkedHomework.filter(c => c.homeworkTitle !== hw.title);
+                localStorage.setItem('checkedHomework', JSON.stringify(checkedHomework));
+            }
+
+            alert('✅ 作业已删除');
+            loadHomeworkManage();
+        }
+
+        function gradeHomework(hwId) {
+            const hw = homeworkList.find(h => h.id === hwId);
+            if (!hw) return;
+
+            const classStudents = studentList.filter(s => s.classId === hw.class_id);
+            const submits = checkedHomework.filter(c => c.homeworkTitle === hw.title);
+
+            let html = `
+                <div style="margin-bottom: 20px;">
+                    <p><strong>作业：</strong> ${hw.title}</p>
+                    <p><strong>班级：</strong> ${getClassById(hw.class_id)?.name || '未知'}</p>
+                    <p><strong>已批改：</strong> ${submits.length}/${classStudents.length}</p>
+                </div>
+                <table class="data-table">
+                    <tr>
+                        <th>学生</th>
+                        <th>状态</th>
+                        <th>分数</th>
+                        <th>操作</th>
+                    </tr>
+            `;
+
+            classStudents.forEach(s => {
+                const submit = submits.find(c => c.studentId === (s.studentId || s.id));
+                html += `
+                    <tr>
+                        <td>${s.name}</td>
+                        <td>${submit ? '<span style="color: #10b981;">已提交</span>' : '<span style="color: #ef4444;">未提交</span>'}</td>
+                        <td>${submit ? `<span style="color: #f59e0b;">${submit.totalScore || submit.score}分</span>` : '-'}</td>
+                        <td>
+                            ${submit ? `
+                                <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="viewGradeDetail('${s.studentId || s.id}', '${hw.title}')">
+                                    <i class="fas fa-eye"></i> 查看
+                                </button>
+                            ` : `
+                                <button class="btn btn-primary" style="padding: 4px 8px;" onclick="openGradeModal('${s.studentId || s.id}', '${s.name}', '${hw.title}')">
+                                    <i class="fas fa-pen"></i> 批改
+                                </button>
+                            `}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</table>';
+
+            document.getElementById('gradeTitle').innerHTML = `批改作业 - ${hw.title}`;
+            document.getElementById('gradeContent').innerHTML = html;
+            document.getElementById('gradeModal').style.display = 'flex';
+        }
+
+        function openGradeModal(studentId, studentName, hwTitle) {
+            const modalContent = `
+                <div style="margin-bottom: 20px;">
+                    <p><strong>学生：</strong> ${studentName} (${studentId})</p>
+                    <p><strong>作业：</strong> ${hwTitle}</p>
+                </div>
+                <input type="number" id="gradeScore" class="form-input" placeholder="请输入成绩（0-100）" min="0" max="100">
+                <textarea id="gradeComment" class="form-textarea" rows="3" placeholder="请输入评语（可选）"></textarea>
+                <div class="modal-footer">
+                    <button class="btn btn-primary" onclick="submitGrade('${studentId}', '${hwTitle}')">提交批改</button>
+                    <button class="btn btn-secondary" onclick="closeModal('gradeModal')">取消</button>
+                </div>
+            `;
+            document.getElementById('gradeContent').innerHTML = modalContent;
+        }
+
+        function submitGrade(studentId, hwTitle) {
+            const score = parseInt(document.getElementById('gradeScore').value);
+            const comment = document.getElementById('gradeComment').value.trim();
+
+            if (isNaN(score) || score < 0 || score > 100) {
+                alert('请输入有效的成绩（0-100）');
+                return;
+            }
+
+            const existing = checkedHomework.findIndex(c => c.studentId === studentId && c.homeworkTitle === hwTitle);
+            
+            if (existing >= 0) {
+                checkedHomework[existing] = {
+                    ...checkedHomework[existing],
+                    score,
+                    totalScore: score,
+                    comment,
+                    time: new Date().toLocaleString()
+                };
+            } else {
+                checkedHomework.push({
+                    studentId,
+                    homeworkTitle: hwTitle,
+                    score,
+                    totalScore: score,
+                    comment,
+                    time: new Date().toLocaleString()
+                });
+            }
+
+            localStorage.setItem('checkedHomework', JSON.stringify(checkedHomework));
+            alert('✅ 成绩已录入');
+            closeModal('gradeModal');
+        }
+
+        function viewGradeDetail(studentId, hwTitle) {
+            const submit = checkedHomework.find(c => c.studentId === studentId && c.homeworkTitle === hwTitle);
+            if (!submit) return;
+
+            const student = getStudentById(studentId);
+            const modalContent = `
+                <div style="margin-bottom: 20px;">
+                    <p><strong>学生：</strong> ${student?.name || studentId}</p>
+                    <p><strong>作业：</strong> ${hwTitle}</p>
+                    <p><strong>分数：</strong> <span style="color: #f59e0b; font-size: 24px;">${submit.totalScore || submit.score}分</span></p>
+                    <p><strong>评语：</strong> ${submit.comment || '无'}</p>
+                    <p><strong>批改时间：</strong> ${submit.time || submit.timestamp || ''}</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-secondary" onclick="closeModal('gradeModal')">关闭</button>
+                </div>
+            `;
+            document.getElementById('gradeContent').innerHTML = modalContent;
+        }
+
+        function viewHomeworkSubmits(hwId) {
+            const hw = homeworkList.find(h => h.id === hwId);
+            if (!hw) return;
+
+            const submits = checkedHomework.filter(c => c.homeworkTitle === hw.title);
+            
+            let html = `
+                <div class="glass-card">
+                    <div class="card-title">
+                        <i class="fas fa-list"></i>
+                        ${hw.title} - 提交记录
+                    </div>
+                    <table class="data-table">
+                        <tr>
+                            <th>学生</th>
+                            <th>分数</th>
+                            <th>提交时间</th>
+                            <th>操作</th>
+                        </tr>
+            `;
+
+            submits.sort((a, b) => (b.totalScore || b.score || 0) - (a.totalScore || a.score || 0)).forEach(s => {
+                const student = getStudentById(s.studentId);
+                html += `
+                    <tr>
+                        <td>${student?.name || s.studentId}</td>
+                        <td><span style="color: #f59e0b;">${s.totalScore || s.score}分</span></td>
+                        <td>${s.time || s.timestamp || ''}</td>
+                        <td>
+                            <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="viewGradeDetail('${s.studentId}', '${hw.title}')">
+                                <i class="fas fa-eye"></i> 详情
+                            </button>
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += '</table></div>';
+            document.getElementById('content').innerHTML = html;
+        }
+
+        // ==================== 知识点管理 ====================
+        function loadKnowledgeManage() {
+            setActiveMenuItem(event.target);
+            document.getElementById('pageTitle').innerHTML = '<i class="fas fa-project-diagram"></i> 知识点管理';
+
+            // 按章节分组
+            const grouped = {};
+            PPT_KNOWLEDGE_NODES.forEach(node => {
+                const chapter = `第${node.chapter}章`;
+                if (!grouped[chapter]) grouped[chapter] = [];
+                grouped[chapter].push(node);
+            });
+
+            let html = '';
+            for (let chapter in grouped) {
+                html += `
+                    <div class="glass-card">
+                        <div class="card-title">
+                            <i class="fas fa-book-open"></i>
+                            ${chapter}
+                        </div>
+                        <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px;">
+                            ${grouped[chapter].map(node => {
+                                // 统计该知识点薄弱人数
+                                let weakCount = 0;
+                                studentList.forEach(s => {
+                                    const level = getStudentMastery(s.studentId || s.id, node.id);
+                                    if (level < 60) weakCount++;
+                                });
+                                const weakRate = studentList.length > 0 ? Math.round((weakCount / studentList.length) * 100) : 0;
+                                let color = weakRate > 30 ? '#ef4444' : weakRate > 15 ? '#f59e0b' : '#10b981';
+
+                                return `
+                                    <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 16px;">
+                                        <div style="font-weight: 600; color: #fff; margin-bottom: 8px;">${node.name}</div>
+                                        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 8px;">${node.description}</div>
+                                        <div>
+                                            <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                                <span style="font-size: 12px;">薄弱率</span>
+                                                <span style="color: ${color};">${weakRate}%</span>
+                                            </div>
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: ${weakRate}%; background: ${color};"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            document.getElementById('content').innerHTML = html;
+        }
+
+        // ==================== 视频管理 ====================
+        function loadVideoManage() {
+            setActiveMenuItem(event.target);
+            document.getElementById('pageTitle').innerHTML = '<i class="fas fa-video"></i> 视频管理';
+
+            let html = `
+                <div class="glass-card">
+                    <button class="btn btn-primary" onclick="openVideoModal()">
+                        <i class="fas fa-plus"></i> 上传新视频
+                    </button>
+                </div>
+            `;
+
+            if (videoList.length === 0) {
+                html += `
+                    <div class="glass-card" style="text-align: center; padding: 60px;">
+                        <i class="fas fa-video" style="font-size: 60px; color: #3b82f6;"></i>
+                        <div style="color: #94a3b8; margin: 20px 0;">暂无视频，点击上方按钮上传</div>
+                    </div>
+                `;
+            } else {
+                videoList.forEach(v => {
+                    html += `
+                        <div class="glass-card">
+                            <div style="display: flex; gap: 20px;">
+                                <div style="width: 200px; height: 120px; background: #1e293b; border-radius: 16px; overflow: hidden; cursor: pointer;" onclick="previewVideo('${v.id}')">
+                                    <video src="${v.url}" style="width: 100%; height: 100%; object-fit: cover;"></video>
+                                </div>
+                                <div style="flex: 1;">
+                                    <div style="font-size: 18px; font-weight: 600; color: #fff; margin-bottom: 8px;">${v.title}</div>
+                                    <div style="color: #94a3b8; margin-bottom: 8px;">${v.description || '暂无描述'}</div>
+                                    <div style="display: flex; gap: 8px; margin-bottom: 12px;">
+                                        <span class="knowledge-tag">${v.knowledge_tag || '未分类'}</span>
+                                        <span style="color: #64748b; font-size: 12px;">上传于 ${v.uploadTime || '未知'}</span>
+                                    </div>
+                                    <div>
+                                        <button class="btn btn-secondary" style="padding: 6px 12px;" onclick="editVideo('${v.id}')">
+                                            <i class="fas fa-pen"></i> 编辑
+                                        </button>
+                                        <button class="btn btn-danger" style="padding: 6px 12px;" onclick="deleteVideo('${v.id}')">
+                                            <i class="fas fa-trash"></i> 删除
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            document.getElementById('content').innerHTML = html;
+        }
+
+        function openVideoModal() {
+            const classOptions = classList.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+            document.getElementById('videoTitle').value = '';
+            document.getElementById('videoDesc').value = '';
+            document.getElementById('videoTag').value = '';
+            document.getElementById('videoClass').innerHTML = `<option value="">全部班级</option>${classOptions}`;
+            document.getElementById('videoFileName').style.display = 'none';
+            document.getElementById('videoModal').style.display = 'flex';
+        }
+
+        function previewVideoFile(input) {
+            if (input.files && input.files[0]) {
+                document.getElementById('videoFileName').innerHTML = `已选择：${input.files[0].name}`;
+                document.getElementById('videoFileName').style.display = 'block';
+            }
+        }
+
+        function uploadVideo() {
+            const title = document.getElementById('videoTitle').value.trim();
+            const desc = document.getElementById('videoDesc').value.trim();
+            const tag = document.getElementById('videoTag').value.trim();
+            const classId = document.getElementById('videoClass').value;
+            const fileInput = document.getElementById('videoFile');
+
+            if (!title || !desc || !tag) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            if (!fileInput.files || !fileInput.files[0]) {
+                alert('请选择视频文件');
+                return;
+            }
+
+            const file = fileInput.files[0];
+            const url = URL.createObjectURL(file);
+
+            const newVideo = {
+                id: 'video_' + Date.now(),
+                title,
+                description: desc,
+                knowledge_tag: tag,
+                class_id: classId || null,
+                url,
+                uploadTime: new Date().toLocaleString(),
+                fileName: file.name
+            };
+
+            videoList.push(newVideo);
+            localStorage.setItem('videoList', JSON.stringify(videoList));
+
+            alert('✅ 视频上传成功');
+            closeModal('videoModal');
+            loadVideoManage();
+        }
+
+        function editVideo(videoId) {
+            const video = videoList.find(v => v.id === videoId);
+            if (!video) return;
+
+            const newTitle = prompt('请输入新标题', video.title);
+            if (newTitle) {
+                video.title = newTitle;
+                localStorage.setItem('videoList', JSON.stringify(videoList));
+                loadVideoManage();
+            }
+        }
+
+        function deleteVideo(videoId) {
+            if (!confirm('确定删除该视频吗？')) return;
+            videoList = videoList.filter(v => v.id !== videoId);
+            localStorage.setItem('videoList', JSON.stringify(videoList));
+            loadVideoManage();
+        }
+
+        function previewVideo(videoId) {
+            const video = videoList.find(v => v.id === videoId);
+            if (video) {
+                document.getElementById('previewVideoTitle').innerText = video.title;
+                const player = document.getElementById('videoPlayer');
+                player.src = video.url;
+                player.load();
+                document.getElementById('videoPreviewModal').style.display = 'flex';
+            }
+        }
+
+        // ==================== 学生管理 ====================
+        function loadStudentList() {
+            setActiveMenuItem(event.target);
+            document.getElementById('pageTitle').innerHTML = '<i class="fas fa-users"></i> 学生管理';
+
+            const classOptions = classList.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+            let html = `
+                <div class="glass-card">
+                    <button class="btn btn-primary" onclick="openStudentModal()">
+                        <i class="fas fa-user-plus"></i> 添加学生
+                    </button>
+                    <select id="studentFilter" class="form-select" style="width: 200px; margin-left: 16px;" onchange="filterStudents(this.value)">
+                        <option value="all">全部班级</option>
+                        ${classList.map(c => `<option value="${c.id}">${c.name}</option>`).join('')}
+                    </select>
+                </div>
+            `;
+
+            if (studentList.length === 0) {
+                html += `
+                    <div class="glass-card" style="text-align: center; padding: 60px;">
+                        <i class="fas fa-users-slash" style="font-size: 60px; color: #3b82f6;"></i>
+                        <div style="color: #94a3b8; margin: 20px 0;">暂无学生，点击上方按钮添加</div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="glass-card">
+                        <table class="data-table">
+                            <tr>
+                                <th>姓名</th>
+                                <th>学号</th>
+                                <th>班级</th>
+                                <th>提交次数</th>
+                                <th>平均分</th>
+                                <th>薄弱知识点</th>
+                                <th>操作</th>
+                            </tr>
+                            ${studentList.map(s => {
+                                const submits = checkedHomework.filter(c => c.studentId === (s.studentId || s.id));
+                                const avg = submits.length > 0 
+                                    ? Math.round(submits.reduce((sum, c) => sum + (c.totalScore || c.score || 0), 0) / submits.length)
+                                    : 0;
+                                
+                                const className = getClassById(s.classId)?.name || '未分配';
+                                
+                                // 找出薄弱点
+                                const weakPoints = PPT_KNOWLEDGE_NODES.filter(node => {
+                                    const level = getStudentMastery(s.studentId || s.id, node.id);
+                                    return level < 60;
+                                }).slice(0, 2).map(n => n.name).join(', ');
+
+                                return `
+                                    <tr>
+                                        <td>${s.name}</td>
+                                        <td>${s.studentId || s.id}</td>
+                                        <td>${className}</td>
+                                        <td>${submits.length}</td>
+                                        <td><span style="color: #f59e0b;">${avg}</span></td>
+                                        <td><span style="color: #ef4444;">${weakPoints || '无'}</span></td>
+                                        <td>
+                                            <button class="btn btn-secondary" style="padding: 4px 8px;" onclick="viewStudentDetail('${s.studentId || s.id}')">
+                                                <i class="fas fa-eye"></i>
+                                            </button>
+                                            <button class="btn btn-danger" style="padding: 4px 8px;" onclick="deleteStudent('${s.studentId || s.id}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </table>
+                    </div>
+                `;
+            }
+
+            document.getElementById('content').innerHTML = html;
+        }
+
+        function openStudentModal() {
+            const classOptions = classList.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+
+            document.getElementById('studentId').value = '';
+            document.getElementById('studentName').value = '';
+            document.getElementById('studentClass').innerHTML = `<option value="">选择班级</option>${classOptions}`;
+            document.getElementById('studentModal').style.display = 'flex';
+        }
+
+        function addStudent() {
+            const id = document.getElementById('studentId').value.trim();
+            const name = document.getElementById('studentName').value.trim();
+            const classId = document.getElementById('studentClass').value;
+
+            if (!id || !name) {
+                alert('请填写完整信息');
+                return;
+            }
+
+            if (studentList.some(s => (s.studentId === id || s.id === id))) {
+                alert('该学号已存在');
+                return;
+            }
+
+            const newStudent = {
+                id: id,
+                studentId: id,
+                name,
+                classId: classId || null
+            };
+
+            studentList.push(newStudent);
+            localStorage.setItem('studentList', JSON.stringify(studentList));
+
+            // 添加到用户表
+            let users = JSON.parse(localStorage.getItem('edu_users') || '[]');
+            if (!users.some(u => u.username === id)) {
+                users.push({ username: id, password: '123456', role: 'student', name });
+                localStorage.setItem('edu_users', JSON.stringify(users));
+            }
+
+            alert('✅ 学生添加成功');
+            closeModal('studentModal');
+            loadStudentList();
+        }
+
+        function deleteStudent(studentId) {
+            if (!confirm('确定删除该学生吗？')) return;
+
+            studentList = studentList.filter(s => (s.studentId !== studentId && s.id !== studentId));
+            localStorage.setItem('studentList', JSON.stringify(studentList));
+
+            // 从用户表删除
+            let users = JSON.parse(localStorage.getItem('edu_users') || '[]');
+            users = users.filter(u => u.username !== studentId);
+            localStorage.setItem('edu_users', JSON.stringify(users));
+
+            alert('✅ 学生已删除');
+            loadStudentList();
+        }
+
+        function viewStudentDetail(studentId) {
+            const student = getStudentById(studentId);
+            if (!student) return;
+
+            const submits = checkedHomework.filter(c => c.studentId === studentId);
+            const avg = submits.length > 0 
+                ? Math.round(submits.reduce((sum, c) => sum + (c.totalScore || c.score || 0), 0) / submits.length)
+                : 0;
+
+            const className = getClassById(student.classId)?.name || '未分配';
+
+            // 知识点掌握情况
+            const masteryData = PPT_KNOWLEDGE_NODES.slice(0, 15).map(node => {
+                const level = getStudentMastery(studentId, node.id);
+                return { name: node.name, level };
+            });
+
+            let html = `
+                <div style="margin-bottom: 20px;">
+                    <p><strong>姓名：</strong> ${student.name}</p>
+                    <p><strong>学号：</strong> ${student.studentId || student.id}</p>
+                    <p><strong>班级：</strong> ${className}</p>
+                    <p><strong>提交次数：</strong> ${submits.length}</p>
+                    <p><strong>平均分：</strong> <span style="color: #f59e0b;">${avg}</span></p>
+                </div>
+                <div class="card-title"><i class="fas fa-brain"></i> 知识点掌握情况</div>
+                <div style="max-height: 300px; overflow-y: auto;">
+                    ${masteryData.map(m => {
+                        const badgeClass = getMasteryBadgeClass(m.level);
+                        return `
+                            <div style="margin-bottom: 12px;">
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 4px;">
+                                    <span>${m.name}</span>
+                                    <span class="mastery-badge ${badgeClass}">${m.level}%</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: ${m.level}%; background: ${m.level >= 80 ? '#10b981' : m.level >= 60 ? '#3b82f6' : m.level >= 40 ? '#f59e0b' : '#ef4444'};"></div>
+                                </div>
+                            </div>
+                        `;
+                    }).join('')}
+                </div>
+            `;
+
+            document.getElementById('studentDetailName').innerHTML = `${student.name} 的详情`;
+            document.getElementById('studentDetailContent').innerHTML = html;
+            document.getElementById('studentDetailModal').style.display = 'flex';
+        }
+
+        function filterStudents(classId) {
+            // 前端过滤已在表格中实现，这里重新加载即可
+            loadStudentList();
+        }
+
+        // ==================== 班级管理 ====================
+        function loadClassManage() {
+            setActiveMenuItem(event.target);
+            document.getElementById('pageTitle').innerHTML = '<i class="fas fa-layer-group"></i> 班级管理';
+
+            let html = `
+                <div class="glass-card">
+                    <button class="btn btn-primary" onclick="openClassModal()">
+                        <i class="fas fa-plus"></i> 创建新班级
+                    </button>
+                </div>
+            `;
+
+            if (classList.length === 0) {
+                html += `
+                    <div class="glass-card" style="text-align: center; padding: 60px;">
+                        <i class="fas fa-layer-group" style="font-size: 60px; color: #3b82f6;"></i>
+                        <div style="color: #94a3b8; margin: 20px 0;">暂无班级，点击上方按钮创建</div>
+                    </div>
+                `;
+            } else {
+                html += `
+                    <div class="glass-card">
+                        <table class="data-table">
+                            <tr>
+                                <th>班级名称</th>
+                                <th>课程</th>
+                                <th>学生人数</th>
+                                <th>作业数量</th>
+                                <th>邀请码</th>
+                                <th>操作</th>
+                            </tr>
+                            ${classList.map(c => {
+                                const studentCount = studentList.filter(s => s.classId === c.id).length;
+                                const homeworkCount = homeworkList.filter(h => h.class_id === c.id).length;
+                                return `
+                                    <tr>
+                                        <td>${c.name}</td>
+                                        <td>${c.course || '面向对象程序设计'}</td>
+                                        <td>${studentCount}</td>
+                                        <td>${homeworkCount}</td>
+                                        <td><code style="background: #1e293b; padding: 4px 8px; border-radius: 8px;">${c.inviteCode}</code></td>
+                                        <td>
+                                            <button class="btn btn-danger" style="padding: 4px 8px;" onclick="deleteClass('${c.id}')">
+                                                <i class="fas fa-trash"></i> 删除
+                                            </button>
+                                        </td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </table>
+                    </div>
+                `;
+            }
+
+            document.getElementById('content').innerHTML = html;
+        }
+
+        function openClassModal() {
+            document.getElementById('className').value = '';
+            document.getElementById('classCourse').value = '面向对象程序设计';
+            document.getElementById('classModal').style.display = 'flex';
+        }
+
+        function createClass() {
+            const name = document.getElementById('className').value.trim();
+            const course = document.getElementById('classCourse').value.trim();
+
+            if (!name) {
+                alert('请输入班级名称');
+                return;
+            }
+
+            const inviteCode = Math.random().toString(36).substring(2, 8).toUpperCase();
+
+            const newClass = {
+                id: 'class_' + Date.now(),
+                name,
+                course,
+                inviteCode,
+                studentCount: 0
+            };
+
+            classList.push(newClass);
+            localStorage.setItem('classList', JSON.stringify(classList));
+
+            alert(`✅ 班级创建成功！\n邀请码：${inviteCode}`);
+            closeModal('classModal');
+            loadClassManage();
+        }
+
+        function deleteClass(classId) {
+            if (!confirm('确定删除该班级吗？这将同时移除班级中的所有学生')) return;
+
+            // 更新学生列表（移出班级）
+            studentList = studentList.map(s => 
+                s.classId === classId ? { ...s, classId: null } : s
+            );
+            localStorage.setItem('studentList', JSON.stringify(studentList));
+
+            // 删除班级
+            classList = classList.filter(c => c.id !== classId);
+            localStorage.setItem('classList', JSON.stringify(classList));
+
+            alert('✅ 班级已删除');
+            loadClassManage();
+        }
+
+        // ==================== 作业排名 ====================
+        function loadRanking() {
+            setActiveMenuItem(event.target);
+            document.getElementById('pageTitle').innerHTML = '<i class="fas fa-trophy"></i> 作业排名';
+
+            if (checkedHomework.length === 0) {
+                document.getElementById('content').innerHTML = `
+                    <div class="glass-card" style="text-align: center; padding: 60px;">
+                        <i class="fas fa-trophy" style="font-size: 60px; color: #3b82f6;"></i>
+                        <div style="color: #94a3b8; margin: 20px 0;">暂无排名数据</div>
+                    </div>
+                `;
+                return;
+            }
+
+            // 按作业分组
+            const grouped = {};
+            checkedHomework.forEach(s => {
+                if (!grouped[s.homeworkTitle]) grouped[s.homeworkTitle] = [];
+                grouped[s.homeworkTitle].push(s);
+            });
+
+            let html = '';
+            for (let title in grouped) {
+                const list = grouped[title]
+                    .sort((a, b) => (b.totalScore || b.score || 0) - (a.totalScore || a.score || 0))
+                    .slice(0, 10);
+
+                html += `
+                    <div class="glass-card">
+                        <div class="card-title">
+                            <i class="fas fa-trophy"></i>
+                            ${title}
+                        </div>
+                        <table class="data-table">
+                            <tr>
+                                <th>排名</th>
+                                <th>学生</th>
+                                <th>分数</th>
+                                <th>提交时间</th>
+                            </tr>
+                            ${list.map((s, i) => {
+                                const student = getStudentById(s.studentId);
+                                let medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : '';
+                                return `
+                                    <tr>
+                                        <td>${i+1} ${medal}</td>
+                                        <td>${student?.name || s.studentId}</td>
+                                        <td><span style="color: #f59e0b; font-weight: 600;">${s.totalScore || s.score}分</span></td>
+                                        <td>${s.time || s.timestamp || ''}</td>
+                                    </tr>
+                                `;
+                            }).join('')}
+                        </table>
+                    </div>
+                `;
+            }
+
+            document.getElementById('content').innerHTML = html;
+        }
+
+        // ==================== AI批改记录 ====================
+        function loadAICorrection() {
+            setActiveMenuItem(event.target);
+            document.getElementById('pageTitle').innerHTML = '<i class="fas fa-robot"></i> AI批改记录';
+
+            if (checkedHomework.length === 0) {
+                document.getElementById('content').innerHTML = `
+                    <div class="glass-card" style="text-align: center; padding: 60px;">
+                        <i class="fas fa-robot" style="font-size: 60px; color: #3b82f6;"></i>
+                        <div style="color: #94a3b8; margin: 20px 0;">暂无批改记录</div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="glass-card"><div class="card-title"><i class="fas fa-robot"></i> 最近批改</div>';
+
+            checkedHomework.slice().reverse().forEach(s => {
+                const student = getStudentById(s.studentId);
+                const score = s.totalScore || s.score || 0;
+                let scoreColor = score >= 90 ? '#10b981' : score >= 75 ? '#3b82f6' : score >= 60 ? '#f59e0b' : '#ef4444';
+
+                html += `
+                    <div style="background: rgba(255,255,255,0.02); padding: 16px; border-radius: 16px; margin-bottom: 12px;">
+                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                            <div>
+                                <span style="font-weight: 600;">${student?.name || s.studentId}</span>
+                                <span style="color: #94a3b8; margin-left: 8px;">${s.homeworkTitle}</span>
+                            </div>
+                            <span style="color: ${scoreColor}; font-weight: 600;">${score}分</span>
+                        </div>
+                        <div style="color: #94a3b8; font-size: 13px;">${s.time || s.timestamp || ''}</div>
+                        ${s.comment ? `<div style="margin-top: 8px; color: #a5b4fc;">📝 评语：${s.comment}</div>` : ''}
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            document.getElementById('content').innerHTML = html;
+        }
+
+        // ==================== 消息通知 ====================
+        function loadMessage() {
+            setActiveMenuItem(event.target);
+            document.getElementById('pageTitle').innerHTML = '<i class="fas fa-bell"></i> 消息通知';
+
+            const key = `notifications_${currentTeacher.id}`;
+            const notifications = JSON.parse(localStorage.getItem(key) || '[]');
+
+            if (notifications.length === 0) {
+                document.getElementById('content').innerHTML = `
+                    <div class="glass-card" style="text-align: center; padding: 60px;">
+                        <i class="fas fa-bell-slash" style="font-size: 60px; color: #3b82f6;"></i>
+                        <div style="color: #94a3b8; margin: 20px 0;">暂无消息通知</div>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = '<div class="glass-card"><div class="card-title"><i class="fas fa-bell"></i> 通知列表</div>';
+
+            notifications.sort((a, b) => new Date(b.time) - new Date(a.time)).forEach(n => {
+                html += `
+                    <div style="padding: 16px; background: rgba(59, 130, 246, 0.1); border-radius: 16px; margin-bottom: 12px; border-left: 4px solid #3b82f6;">
+                        <div style="font-weight: 600; color: #fff; margin-bottom: 4px;">${n.title}</div>
+                        <div style="color: #94a3b8; font-size: 13px; margin-bottom: 8px;">${n.content}</div>
+                        <div style="color: #64748b; font-size: 11px;">${n.time}</div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+            document.getElementById('content').innerHTML = html;
+        }
+
+        // ==================== 个人设置 ====================
+        let tempAvatarFile = null;
+
+        function loadSettings() {
+            setActiveMenuItem(event.target);
+            document.getElementById('pageTitle').innerHTML = '<i class="fas fa-gear"></i> 个人设置';
+
+            document.getElementById('content').innerHTML = `
+                <div class="glass-card">
+                    <div class="card-title">
+                        <i class="fas fa-user-circle"></i>
+                        头像设置
+                    </div>
+                    <div class="avatar-container">
+                        <div class="avatar" onclick="document.getElementById('avatarUpload').click()">
+                            ${currentTeacher.avatar ? 
+                                `<img src="${currentTeacher.avatar}" alt="头像">` : 
+                                `<i class="fas fa-user-tie"></i>`
+                            }
+                        </div>
+                        <input type="file" id="avatarUpload" accept="image/*" style="display: none;" onchange="previewAvatar(this)">
+                        <button class="btn btn-secondary" onclick="document.getElementById('avatarUpload').click()">
+                            <i class="fas fa-camera"></i> 更换头像
+                        </button>
+                    </div>
+                </div>
+
+                <div class="glass-card">
+                    <div class="card-title">
+                        <i class="fas fa-id-card"></i>
+                        教师信息
+                    </div>
+                    <input type="text" id="teacherName" class="form-input" value="${currentTeacher.name}" placeholder="姓名">
+                    <input type="text" class="form-input" value="${currentTeacher.id}" disabled placeholder="工号">
+                    <input type="text" id="teacherEmail" class="form-input" value="teacher@school.edu.cn" placeholder="邮箱">
+                    <button class="btn btn-primary" onclick="saveTeacherInfo()">
+                        <i class="fas fa-save"></i> 保存信息
+                    </button>
+                </div>
+
+                <div class="glass-card">
+                    <div class="card-title">
+                        <i class="fas fa-key"></i>
+                        修改密码
+                    </div>
+                    <input type="password" id="oldPwd" class="form-input" placeholder="原密码">
+                    <input type="password" id="newPwd1" class="form-input" placeholder="新密码（至少6位）">
+                    <input type="password" id="newPwd2" class="form-input" placeholder="确认新密码">
+                    <button class="btn btn-primary" onclick="changePassword()">
+                        <i class="fas fa-key"></i> 修改密码
+                    </button>
+                    <div id="pwdTip" style="margin-top: 12px; color: #ef4444; font-size: 13px;"></div>
+                </div>
+            `;
+        }
+
+        function previewAvatar(input) {
+            if (input.files && input.files[0]) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('avatarPreview').src = e.target.result;
+                    document.getElementById('avatarModal').style.display = 'flex';
+                    tempAvatarFile = e.target.result;
+                };
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function confirmAvatar() {
+            if (!tempAvatarFile) return;
+
+            currentTeacher.avatar = tempAvatarFile;
+            
+            let teacherList = JSON.parse(localStorage.getItem('teacherList') || '[]');
+            teacherList = teacherList.map(t => 
+                t.id === currentTeacher.id ? { ...t, avatar: tempAvatarFile } : t
+            );
+            localStorage.setItem('teacherList', JSON.stringify(teacherList));
+
+            closeModal('avatarModal');
+            loadSettings();
+        }
+
+        function saveTeacherInfo() {
+            const name = document.getElementById('teacherName').value.trim();
+            if (!name) {
+                alert('姓名不能为空');
+                return;
+            }
+
+            currentTeacher.name = name;
+
+            let teacherList = JSON.parse(localStorage.getItem('teacherList') || '[]');
+            teacherList = teacherList.map(t => 
+                t.id === currentTeacher.id ? { ...t, name } : t
+            );
+            localStorage.setItem('teacherList', JSON.stringify(teacherList));
+
+            let users = JSON.parse(localStorage.getItem('edu_users') || '[]');
+            users = users.map(u => u.username === currentTeacher.id ? { ...u, name } : u);
+            localStorage.setItem('edu_users', JSON.stringify(users));
+
+            alert('✅ 信息保存成功');
+        }
+
+        function changePassword() {
+            const oldPwd = document.getElementById('oldPwd').value;
+            const newPwd1 = document.getElementById('newPwd1').value;
+            const newPwd2 = document.getElementById('newPwd2').value;
+            const tip = document.getElementById('pwdTip');
+
+            if (!oldPwd || !newPwd1 || !newPwd2) {
+                tip.innerText = '请填写完整';
+                return;
+            }
+
+            if (newPwd1 !== newPwd2) {
+                tip.innerText = '两次密码不一致';
+                return;
+            }
+
+            if (newPwd1.length < 6) {
+                tip.innerText = '密码至少6位';
+                return;
+            }
+
+            let users = JSON.parse(localStorage.getItem('edu_users') || '[]');
+            const user = users.find(u => u.username === currentTeacher.id);
+
+            if (!user) {
+                tip.innerText = '用户不存在';
+                return;
+            }
+
+            if (user.password !== oldPwd) {
+                tip.innerText = '原密码错误';
+                return;
+            }
+
+            users = users.map(u => u.username === currentTeacher.id ? { ...u, password: newPwd1 } : u);
+            localStorage.setItem('edu_users', JSON.stringify(users));
+
+            tip.style.color = '#10b981';
+            tip.innerText = '✅ 密码修改成功';
+            setTimeout(() => tip.innerText = '', 3000);
+        }
+
+        // ==================== 导出全局函数 ====================
+        window.loadDashboard = loadDashboard;
+        window.loadClassAnalysis = loadClassAnalysis;
+        window.loadHomeworkManage = loadHomeworkManage;
+        window.loadKnowledgeManage = loadKnowledgeManage;
+        window.loadVideoManage = loadVideoManage;
+        window.loadStudentList = loadStudentList;
+        window.loadClassManage = loadClassManage;
+        window.loadRanking = loadRanking;
+        window.loadAICorrection = loadAICorrection;
+        window.loadMessage = loadMessage;
+        window.loadSettings = loadSettings;
+        window.closeModal = closeModal;
+        window.openHomeworkModal = openHomeworkModal;
+        window.publishHomework = publishHomework;
+        window.editHomework = editHomework;
+        window.deleteHomework = deleteHomework;
+        window.gradeHomework = gradeHomework;
+        window.openGradeModal = openGradeModal;
+        window.submitGrade = submitGrade;
+        window.viewGradeDetail = viewGradeDetail;
+        window.viewHomeworkSubmits = viewHomeworkSubmits;
+        window.openVideoModal = openVideoModal;
+        window.previewVideoFile = previewVideoFile;
+        window.uploadVideo = uploadVideo;
+        window.editVideo = editVideo;
+        window.deleteVideo = deleteVideo;
+        window.previewVideo = previewVideo;
+        window.openStudentModal = openStudentModal;
+        window.addStudent = addStudent;
+        window.deleteStudent = deleteStudent;
+        window.viewStudentDetail = viewStudentDetail;
+        window.filterStudents = filterStudents;
+        window.openClassModal = openClassModal;
+        window.createClass = createClass;
+        window.deleteClass = deleteClass;
+        window.renderClassAnalysis = renderClassAnalysis;
+        window.previewAvatar = previewAvatar;
+        window.confirmAvatar = confirmAvatar;
+        window.saveTeacherInfo = saveTeacherInfo;
+        window.changePassword = changePassword;
+    </script>
+</body>
+</html>
